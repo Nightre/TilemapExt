@@ -7,6 +7,8 @@ import { getDrawable } from "./uitl";
 import { SHOW_MODE } from "./constant"
 
 // TODO:获取tile，设置tile超出是糊有bug
+
+// TODO: 代码有待优化，赶时间做的，drawcall用elementdraw来优化
 class TileMapExt {
     constructor() {
         this.vm = Scratch.vm;
