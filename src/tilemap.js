@@ -232,10 +232,23 @@ class TileMap {
         let ids = []
         for (const drawableId in this.children) {
             ids.push(drawableId)
-            const drawable = renderer._allDrawables[drawableId]
-            const data = this.children[drawableId]//this.children的data
-            console.log(data)
-            drawable.specialDrawZ = this.depthBufferCache[data.z]
+            //当前绘制的精灵
+            const drawable = renderer._allDrawables[drawableId] 
+            //this.children的data
+            const data = this.children[drawableId]
+            // 当前绘制的第几个tile的z
+            const index = data.z - viewId.y
+            // 计算是否超出了绘制了的tile
+            if (index > this.depthBufferCache.length - 1) {
+                // 若超出了，就设为 1 
+                drawable.specialDrawZ = 1
+                continue
+            }
+            // 没有超出
+            drawable.specialDrawZ = this.depthBufferCache[index]
+            if (!drawable.specialDrawZ) { // 0 or undfined
+                drawable.specialDrawZ = -1
+            }
         }
         // 禁止skip，绘制所有子
         renderer._drawThese(ids, drawMode, projection, opts, false)
@@ -335,8 +348,9 @@ class TileMap {
         console.log(this.children, "添加精灵")
     }
     removeChild(drawableId) {
-        console.log(this.children, "移除精灵")
+        this.renderer._allDrawables[drawableId].specialDrawZ = null
         delete this.children[drawableId]
+        console.log(this.children, "移除精灵")
     }
     setChildZ(drawableId, z) {
         console.log(this.children, "设置精灵图层")

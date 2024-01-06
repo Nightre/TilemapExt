@@ -193,6 +193,38 @@ export default (Scratch) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
+                text: '🎴 图层'
+            },
+            {
+                opcode: 'joinTileMap',
+                text: '加入[TILEMAP]的瓦片地图',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    TILEMAP: {
+                        type: Scratch.ArgumentType.STRING,
+                        menu: "SPRITE_MENU_WITH_ALL"
+                    }
+                }
+            },
+            {
+                opcode: 'setLayerInTileMap',
+                text: '图层(非原版图层)设为地图中的第[LAYER]行瓦片',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    LAYER: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        menu: 0
+                    }
+
+                }
+            },
+            {
+                opcode: 'quitTilemap',
+                text: '退出当前地图',
+                blockType: Scratch.BlockType.COMMAND,
+            },
+            {
+                blockType: Scratch.BlockType.LABEL,
                 text: '📍 坐标变换',
             },
             {
@@ -233,59 +265,40 @@ export default (Scratch) => {
                     }
                 }
             },
-
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: '🎴 图层'
-            },
-            {
-                opcode: 'joinTileMap',
-                text: '加入瓦片地图[TILEMAP]',
-                blockType: Scratch.BlockType.COMMAND,
-                arguments: {
-                    TILEMAP: {
-                        type: Scratch.ArgumentType.STRING,
-                        defaultValue: "0"
-                    }
-                }
-            },
-            {
-                opcode: 'setLayerInTileMap',
-                text: '设置我的图层在瓦片地图中的第[LAYER]行显示',
-                blockType: Scratch.BlockType.COMMAND,
-                arguments: {
-                    LAYER: {
-                        type: Scratch.ArgumentType.NUMBER,
-                        defaultValue: 0
-                    }
-                }
-            },
             {
                 blockType: Scratch.BlockType.LABEL,
                 text: '🎳 碰撞（敬请期待）'
             },
         ],
         menus: {
-            SHOW_MODE: [
-                {
-                    value: SHOW_MODE.TILEMAP,
-                    text: '显示瓦片地图和角色',
-                },
-                {
-                    value: SHOW_MODE.SPRITE,
-                    text: '仅显示角色',
-                },
-            ],
-            POSITION: [
-                {
-                    value: POSITION.X,
-                    text: 'x',
-                },
-                {
-                    value: POSITION.Y,
-                    text: 'y',
-                },
-            ],
+            SHOW_MODE: {
+                items: [
+                    {
+                        value: SHOW_MODE.TILEMAP,
+                        text: '显示瓦片地图和角色',
+                    },
+                    {
+                        value: SHOW_MODE.SPRITE,
+                        text: '仅显示角色',
+                    },
+                ]
+            },
+            POSITION: {
+                items: [
+                    {
+                        value: POSITION.X,
+                        text: 'x',
+                    },
+                    {
+                        value: POSITION.Y,
+                        text: 'y',
+                    },
+                ]
+            },
+            SPRITE_MENU_WITH_ALL: {
+                acceptReporters: false,
+                items: 'drawablesMenu',
+            },
         },
     }
 }

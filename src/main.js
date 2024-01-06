@@ -12,6 +12,7 @@ import { SHOW_MODE } from "./constant"
 class TileMapExt {
     constructor() {
         this.vm = Scratch.vm;
+        this.runtime = vm.runtime;
         this.renderer = this.vm.renderer;
         this.twgl = this.renderer.exports.twgl;
         this.gl = this.renderer.gl
@@ -156,6 +157,7 @@ class TileMapExt {
             drawable.tileViewX = 0
             drawable.tileViewY = 0
             drawable.skipDraw = false
+            drawable.specialDrawZ = null
             drawable.tileMap = new TileMap(this)
         }
     }
@@ -316,18 +318,25 @@ class TileMapExt {
     joinTileMap(args, uitl) {
         // 获取 drawable
         const drawable = getDrawable(uitl, this.renderer)
+
         // 获取要加入的tilemap
         const target = this.renderer._allDrawables[args.TILEMAP]
         // 获取我之前的tilemap
         const parent = drawable.tileMapParent
+        if (target === drawable || target === parent) {
+            // 我加入我自己，或者加入我的父
+            return;
+        }
+        drawable.skipDraw = false
+        drawable.tileMapParent = null
         if (parent && parent.tileMap) {// 如果有就先退出
             parent.tileMap.removeChild(drawable._id)
         }
-        drawable.skipDraw = false
-        if (!target || !target.tileMap) return // 如果目标存在
-        drawable.skipDraw = true // 设置跳过，不绘制，tilemap来绘制
-        drawable.tileMapParent = target // 那么就设置为父
-        target.tileMap.addChild(drawable._id) // 并加入
+        if (target && target.tileMap) {
+            drawable.skipDraw = true // 设置跳过，不绘制，tilemap来绘制
+            drawable.tileMapParent = target // 那么就设置为父
+            target.tileMap.addChild(drawable._id) // 并加入
+        }
     }
     setLayerInTileMap(args, uitl) {
         // 获取 drawable
@@ -335,6 +344,15 @@ class TileMapExt {
         const parent = drawable.tileMapParent
         if (parent && parent.tileMap) {// 如果加入了tilemap那就设置否则啥也不干
             parent.tileMap.setChildZ(drawable._id, args.LAYER)
+        }
+    }
+    quitTilemap(args, uitl) {
+        const drawable = getDrawable(uitl, this.renderer)
+        const parent = drawable.tileMapParent
+        if (parent && parent.tileMap) {// 如果有退出
+            drawable.skipDraw = false
+            drawable.tileMapParent = null
+            parent.tileMap.removeChild(drawable._id)
         }
     }
     dirty() {
@@ -355,6 +373,23 @@ class TileMapExt {
      */
     isTileExsit(drawable, args) {
         return drawable.tileMap.isElementExist(drawable.tileMap, args.X - 1, args.Y - 1)
+    }
+    getSpriteDrawableMenu() {
+        const { targets } = this.runtime;
+
+        return targets
+            .filter((target) => !target.isStage && target.isOriginal)
+            .map((target) => ({
+                text: target.sprite.name,
+                value: target.drawableID.toString(),
+            }));
+    }
+    /**
+     * 获取所有精灵
+     */
+    drawablesMenu() {
+        const menu = this.getSpriteDrawableMenu();
+        return menu
     }
 }
 
