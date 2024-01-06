@@ -41,7 +41,6 @@ class TileMap {
             y: 0
         }
         this.tileSet = {}
-        this.tileData = []
 
         this.buffer = this.gl.createBuffer()
         this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
@@ -52,7 +51,7 @@ class TileMap {
 
         this.tileLayers = []
         // 所有tilemapdata数据，每一层的
-        this.allTileData = []
+        this.tileData = []
         this.createTileLayer("default_layer")
     }
 
@@ -107,10 +106,71 @@ class TileMap {
         this.depthBufferCache = []
         const skin = drawable.skin
         const program = tileProgramInfo.program
+        
+        // 深度单位，一行tilemap的深度的单位
+        const depthuUnit = 1/ (y - viewId.y)*drawSize.y
+
         gl.clear(gl.DEPTH_BUFFER_BIT)
         gl.enable(gl.DEPTH_TEST)
         gl.depthFunc(gl.LESS)
         gl.useProgram(program)
+
+        const drawLayer = (data, x, y, depth, renderOffset) => {
+            const tileId = data[y][x]
+            const tile = this.tileSet[tileId]
+
+            if (tile) {
+                let textureUnit = Object.keys(tilesTextureData).indexOf(tile.texture.toString())
+                if (textureUnit === -1) {
+                    // tilesTextureData 还没创建待会才创建
+                    textureUnit = Object.keys(tilesTextureData).length
+                }
+                textureUnit = textureUnit % this.maxTextureUnits
+
+
+                const offsetX = renderOffset.x + (tile.ox ?? 0)
+                const offsetY = renderOffset.y + (tile.oy ?? 0)
+
+                const pos = [
+                    [offsetX, offsetY, tile.x, tile.y, textureUnit, depth],
+                    [offsetX + tile.w, offsetY, tile.x + tile.w, tile.y, textureUnit, depth],
+                    [offsetX + tile.w, offsetY + tile.h, tile.x + tile.w, tile.y + tile.h, textureUnit, depth],
+                    [offsetX, offsetY + tile.h, tile.x, tile.y + tile.h, textureUnit, depth]
+                ]
+
+                attr.push(
+                    ...pos[0],
+                    ...pos[1],
+                    ...pos[2],
+
+                    ...pos[0],
+                    ...pos[2],
+                    ...pos[3],
+
+                )
+                count += 6
+                /**
+                 * tileTextureData用于记录每个tile.texture需要绘制的数据
+                 */
+                if (!tilesTextureData[tile.texture]) {
+                    tilesTextureData[tile.texture] = {
+                        count: 0,
+                        buffer: []
+                    }
+                }
+                tilesTextureData[tile.texture].count += 6
+                tilesTextureData[tile.texture].buffer.push(
+                    ...pos[0],
+                    ...pos[1],
+                    ...pos[2],
+
+                    ...pos[0],
+                    ...pos[2],
+                    ...pos[3],
+                )
+            }
+        }
+
 
         for (let y = viewId.y; y < viewId.y + drawSize.y; y++) {// 从下向上渲染
             renderOffset.x = 0
@@ -128,68 +188,16 @@ class TileMap {
                 if (x > this.mapSize.x - 1 || x < 0 || y < 0 || y > this.mapSize.y - 1) {
 
                 } else {
-                    // 检测是否存在这个tiledata里
-                    // 该层面的数据
-                    const data2d = this.allTileData[0]//TODO
-                    if (!this.isElementExist(data2d, x, y)) {
-                        renderOffset.x += tileSize.x
+
+                    if (!this.isElementExist(this.tileData[0], x, y)) {
                         continue
                     }
-                    const tileId = data2d[y][x]
-                    const tile = this.tileSet[tileId]
 
-                    if (!tile) {
-                        renderOffset.x += tileSize.x
-                        continue
+                    // 遍历层
+                    for (const index in this.tileData) {
+                        const layerid = this.tileData.length - index - 1
+                        drawLayer(this.tileData[layerid], x, y, depth, renderOffset)
                     }
-                    let textureUnit = Object.keys(tilesTextureData).indexOf(tile.texture.toString())
-                    if (textureUnit === -1) {
-                        // tilesTextureData 还没创建待会才创建
-                        textureUnit = Object.keys(tilesTextureData).length
-                    }
-                    textureUnit = textureUnit % this.maxTextureUnits
-
-
-                    const offsetX = renderOffset.x + (tile.ox ?? 0)
-                    const offsetY = renderOffset.y + (tile.oy ?? 0)
-
-                    const pos = [
-                        [offsetX, offsetY, tile.x, tile.y, textureUnit, depth],
-                        [offsetX + tile.w, offsetY, tile.x + tile.w, tile.y, textureUnit, depth],
-                        [offsetX + tile.w, offsetY + tile.h, tile.x + tile.w, tile.y + tile.h, textureUnit, depth],
-                        [offsetX, offsetY + tile.h, tile.x, tile.y + tile.h, textureUnit, depth]
-                    ]
-
-                    attr.push(
-                        ...pos[0],
-                        ...pos[1],
-                        ...pos[2],
-
-                        ...pos[0],
-                        ...pos[2],
-                        ...pos[3],
-
-                    )
-                    count += 6
-                    /**
-                     * tileTextureData用于记录每个tile.texture需要绘制的数据
-                     */
-                    if (!tilesTextureData[tile.texture]) {
-                        tilesTextureData[tile.texture] = {
-                            count: 0,
-                            buffer: []
-                        }
-                    }
-                    tilesTextureData[tile.texture].count += 6
-                    tilesTextureData[tile.texture].buffer.push(
-                        ...pos[0],
-                        ...pos[1],
-                        ...pos[2],
-
-                        ...pos[0],
-                        ...pos[2],
-                        ...pos[3],
-                    )
                 }
                 renderOffset.x += tileSize.x
 
@@ -278,9 +286,9 @@ class TileMap {
         gl.enableVertexAttribArray(atexcoordLoc);
 
         // 设置 atextureid 属性指针
-        var atexcoordLoc = gl.getAttribLocation(program, "atextureid");
-        gl.vertexAttribPointer(atexcoordLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
-        gl.enableVertexAttribArray(atexcoordLoc);
+        // var atexcoordLoc = gl.getAttribLocation(program, "atextureid");
+        // gl.vertexAttribPointer(atexcoordLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
+        // gl.enableVertexAttribArray(atexcoordLoc);
 
         // 设置 adepth 属性指针
         var adepthLoc = gl.getAttribLocation(program, "adepth");
@@ -290,23 +298,14 @@ class TileMap {
         gl.drawArrays(gl.TRIANGLES, 0, count)
     }
 
-    setTile(layer , x, y, t) {
-        this.allTileData[layer][y][x] = t
-        //this.tileData[y][x] = t
+    setTile(layer, x, y, t) {
+        this.tileData[layer][y][x] = t
     }
-    getTile(layer , x, y) {
-        return this.allTileData[layer][y][x]
-        //return this.tileData[y][x]
+    getTile(layer, x, y) {
+        return this.tileData[layer][y][x]
     }
-    clearAllTile(layer ) {
-
-        // for (const y in this.tileData) {
-        //     for (const x in this.tileData[y]) {
-        //         this.setTile(x, y, -1)
-        //     }
-        // }
-
-        const targetLayer = this.allTileData[layer]
+    clearAllTile(layer) {
+        const targetLayer = this.tileData[layer]
         for (const y in targetLayer) {
             for (const x in targetLayer[y]) {
                 this.setTile(layer, x, y, -1)
@@ -326,11 +325,11 @@ class TileMap {
         this.mapSize.x = w
         this.mapSize.y = h
         // 修改
-        this.tileData = this.create2DArray(w, h, this.tileData)
-        for (const tileDataIndex in this.allTileData) {
-            this.allTileData[tileDataIndex] = this.create2DArray(w, h, this.allTileData[tileDataIndex])
+
+        for (const tileDataIndex in this.tileData) {
+            this.tileData[tileDataIndex] = this.create2DArray(w, h, this.tileData[tileDataIndex])
         }
-        
+
     }
     create2DArray(w, h, old = []) {
         //TODO:可以检测，如果是比old大的就直接在old上面改，减小开销
@@ -375,7 +374,7 @@ class TileMap {
 
     createTileLayer(name) {
         if (!this.tileLayers.includes(name)) {
-            this.allTileData[this.tileLayers.length] = this.create2DArray(this.mapSize.x, this.mapSize.y)
+            this.tileData[this.tileLayers.length] = this.create2DArray(this.mapSize.x, this.mapSize.y)
             this.tileLayers.push(name)
         }
     }
@@ -386,7 +385,7 @@ class TileMap {
         }
         let index = this.tileLayers.indexOf(name)
         if (index !== -1) {
-            this.allTileData.splice(index, 1);
+            this.tileData.splice(index, 1);
             this.tileLayers.splice(index, 1);
         }
     }
@@ -407,7 +406,7 @@ class TileMap {
     isLayerExist(layerName) {
         return this.tileLayers.includes(layerName)
     }
-    getLayerByName(layerName){
+    getLayerByName(layerName) {
         return this.tileLayers.indexOf(layerName)
     }
 }
