@@ -50,7 +50,10 @@ class TileMap {
         // 记录子及其数据
         this.children = {}
 
-        this.tileLayers = ["默认层"]
+        this.tileLayers = []
+        // 所有tilemapdata数据，每一层的
+        this.allTileData = []
+        this.createTileLayer("default_layer")
     }
 
     //TODO:drawable缩放
@@ -285,16 +288,27 @@ class TileMap {
         gl.drawArrays(gl.TRIANGLES, 0, count)
     }
 
-    setTile(x, y, t) {
+    setTile(layer, x, y, t) {
+        //TODO
+        this.tileData[layer][y][x] = t
         this.tileData[y][x] = t
     }
-    getTile(x, y) {
+    getTile(layer, x, y) {
+        this.tileLayers[layer][y][x] //TODO
         return this.tileData[y][x]
     }
-    clearAllTile() {
+    clearAllTile(layer) {
+        //TODO
         for (const y in this.tileData) {
             for (const x in this.tileData[y]) {
                 this.setTile(x, y, -1)
+            }
+        }
+
+        const targetLayer = this.tileLayers[layer]
+        for (const y in targetLayer) {
+            for (const x in targetLayer[y]) {
+                this.setTile(layer, x, y, -1)
             }
         }
     }
@@ -312,6 +326,10 @@ class TileMap {
         this.mapSize.y = h
         // 修改
         this.tileData = this.create2DArray(w, h, this.tileData)
+        for (const tileDataIndex in this.allTileData) {
+            let tileData = this.allTileData[tileDataIndex]
+            tileData = this.create2DArray(w, h, tileData)
+        }
     }
     create2DArray(w, h, old = []) {
         //TODO:可以检测，如果是比old大的就直接在old上面改，减小开销
@@ -356,12 +374,18 @@ class TileMap {
 
     createTileLayer(name) {
         if (!this.tileLayers.includes(name)) {
+            this.allTileData[this.tileLayers.length] = this.create2DArray(this.mapSize.x, this.mapSize.y)
             this.tileLayers.push(name)
         }
     }
     deleteTileLayer(name) {
+        if (name == 'default_layer') {
+            console.warn("默认图层不可删除")
+            return
+        }
         let index = this.tileLayers.indexOf(name)
         if (index !== -1) {
+            this.allTileData.splice(index, 1);
             this.tileLayers.splice(index, 1);
         }
     }

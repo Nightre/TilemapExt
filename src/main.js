@@ -267,7 +267,7 @@ class TileMapExt {
         // 检测目标tile是否存在
         if (this.isTileExsit(drawable, args)) return '-1'
         // 获取tile
-        return drawable.tileMap.getTile(args.X - 1, args.Y - 1)
+        return drawable.tileMap.getTile(args.LAYER, args.X - 1, args.Y - 1)
     }
     setTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
@@ -275,7 +275,7 @@ class TileMapExt {
         // 检测目标tile是否存在
         if (this.isTileExsit(drawable, args)) return '-1'
         // 设置tile
-        drawable.tileMap.setTile(args.X - 1, args.Y - 1, args.TILE_ID)
+        drawable.tileMap.setTile(args.LAYER, args.X - 1, args.Y - 1, args.TILE_ID)
         // 需要重新绘制一遍
         // 不能每次调用都绘制因为可能在同一帧里面调用多次
         this.tileChanged = true
@@ -288,7 +288,7 @@ class TileMapExt {
         if (this.isTileExsit(drawable, args)) return '-1'
 
         // 设置tile
-        drawable.tileMap.setTile(args.X - 1, args.Y - 1, -1)
+        drawable.tileMap.setTile(args.LAYER, args.X - 1, args.Y - 1, -1)
         // 需要重新绘制一遍
         this.dirty()
     }
@@ -296,7 +296,7 @@ class TileMapExt {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
         // 清除
-        drawable.tileMap.clearAllTile()
+        drawable.tileMap.clearAllTile(args.LAYER)
         // 需要重新绘制一遍
         this.dirty()
     }
@@ -361,11 +361,11 @@ class TileMapExt {
         const drawable = this.getDrawableInit(uitl)
         drawable.tileMap.createTileLayer(args.LAYER_NAME)
     }
-    deleteTileLayer(args, uitl){
+    deleteTileLayer(args, uitl) {
         const drawable = this.getDrawableInit(uitl)
         drawable.tileMap.deleteTileLayer(args.LAYER_NAME)
     }
-    getTileLayers(args, uitl){
+    getTileLayers(args, uitl) {
         const drawable = this.getDrawableInit(uitl)
         return JSON.stringify(drawable.tileMap.tileLayers)
     }

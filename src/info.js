@@ -135,7 +135,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'getTile',
-                text: '获取瓦片的[X][Y]的瓦片名称',
+                text: '获取[LAYER]层的瓦片的[X][Y]的瓦片名称',
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -146,11 +146,15 @@ export default (Scratch) => {
                         type: Scratch.ArgumentType.NUMBER,
                         defaultValue: 0,
                     },
+                    LAYER:{
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "default_layer",
+                    }
                 }
             },
             {
                 opcode: 'setTile',
-                text: '设置地图中[X][Y]瓦片为[TILE_ID]瓦片',
+                text: '设置地图中[LAYER]层的[X][Y]瓦片为[TILE_ID]瓦片',
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -164,12 +168,16 @@ export default (Scratch) => {
                     TILE_ID: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "草坪",
+                    },
+                    LAYER:{
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "default_layer",
                     }
                 }
             },
             {
                 opcode: 'clearTile',
-                text: '擦除地图中[X][Y]的瓦片',
+                text: '擦除地图中[LAYER]层的[X][Y]的瓦片',
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -183,13 +191,23 @@ export default (Scratch) => {
                     TILE_ID: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "草坪",
+                    },
+                    LAYER:{
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "default_layer",
                     }
                 }
             },
             {
                 opcode: 'clearAllTile',
-                text: '擦除所有',
+                text: '擦除[LAYER]层',
                 blockType: Scratch.BlockType.COMMAND,
+                arguments:{
+                    LAYER:{
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "default_layer",
+                    }
+                }
             },
             {
                 blockType: Scratch.BlockType.LABEL,
