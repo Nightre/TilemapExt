@@ -42,12 +42,15 @@ class TileMap {
         }
         this.tileSet = {}
         this.tileData = []
+
         this.buffer = this.gl.createBuffer()
         this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
         this.depthBufferCache = []
         // 记录子及其数据
         this.children = {}
+
+        this.tileLayers = ["默认层"]
     }
 
     //TODO:drawable缩放
@@ -135,7 +138,7 @@ class TileMap {
                         continue
                     }
                     let textureUnit = Object.keys(tilesTextureData).indexOf(tile.texture.toString())
-                    if (textureUnit == -1) {
+                    if (textureUnit === -1) {
                         // tilesTextureData 还没创建待会才创建
                         textureUnit = Object.keys(tilesTextureData).length
                     }
@@ -233,7 +236,7 @@ class TileMap {
         for (const drawableId in this.children) {
             ids.push(drawableId)
             //当前绘制的精灵
-            const drawable = renderer._allDrawables[drawableId] 
+            const drawable = renderer._allDrawables[drawableId]
             //this.children的data
             const data = this.children[drawableId]
             // 当前绘制的第几个tile的z
@@ -297,35 +300,41 @@ class TileMap {
     }
     setMapSize(w, h) {
         // 重设瓦片地图大小
-        if (w == this.mapSize.x && h == this.mapSize.y) {
+        if (w === this.mapSize.x && h === this.mapSize.y) {
             // 大小一样，不修改
             //console.log("大小一样，不修改")
             return
         }
+
+
+
         this.mapSize.x = w
         this.mapSize.y = h
-
-        let newTileData = []
+        // 修改
+        this.tileData = this.create2DArray(w, h, this.tileData)
+    }
+    create2DArray(w, h, old = []) {
+        //TODO:可以检测，如果是比old大的就直接在old上面改，减小开销
+        let newArray = []
         for (let y = 0; y < h; y++) {
             let row = []
             for (let x = 0; x < w; x++) {
                 // 如果原地图有就用原地图。如果超出了原地图那么就设为-1（空）
-                if (y > this.tileData.length - 1) {
+                if (y > old.length - 1) {
                     row.push(-1)
                     continue
                 }
                 // 判断x是否超出
-                if (x > this.tileData[0].length - 1) {
+                if (x > old[0].length - 1) {
                     row.push(-1)
                     continue
                 }
                 // 若没超出
-                row.push(this.tileData[y][x])
+                row.push(old[y][x])
             }
-            newTileData.push(row)
+            newArray.push(row)
         }
-        // 修改
-        this.tileData = newTileData
+        return newArray
     }
     deleteTileSet(id) {
         delete this.tileSet[id]
@@ -343,6 +352,20 @@ class TileMap {
             return false;  // 如果不存在，返回 false
         }
     }
+
+
+    createTileLayer(name) {
+        if (!this.tileLayers.includes(name)) {
+            this.tileLayers.push(name)
+        }
+    }
+    deleteTileLayer(name) {
+        let index = this.tileLayers.indexOf(name)
+        if (index !== -1) {
+            this.tileLayers.splice(index, 1);
+        }
+    }
+
     addChild(drawableId) {
         this.children[drawableId] = { z: 0 }
         console.log(this.children, "添加精灵")

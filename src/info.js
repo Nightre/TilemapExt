@@ -193,6 +193,37 @@ export default (Scratch) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
+                text: '🎰 瓦片层'
+            },
+            {
+                opcode: 'createTileLayer',
+                text: '创建瓦片层，命名为[LAYER_NAME]',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    LAYER_NAME: {
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "建筑物"
+                    }
+                }
+            },
+            {
+                opcode: 'deleteTileLayer',
+                text: '删除瓦片层[LAYER_NAME]',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    LAYER_NAME: {
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "建筑物"
+                    }
+                }
+            },
+            {
+                opcode: 'getTileLayers',
+                text: '获取所有瓦片层',
+                blockType: Scratch.BlockType.REPORTER,
+            },
+            {
+                blockType: Scratch.BlockType.LABEL,
                 text: '🎴 图层'
             },
             {

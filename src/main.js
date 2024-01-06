@@ -355,6 +355,21 @@ class TileMapExt {
             parent.tileMap.removeChild(drawable._id)
         }
     }
+
+
+    createTileLayer(args, uitl) {
+        const drawable = this.getDrawableInit(uitl)
+        drawable.tileMap.createTileLayer(args.LAYER_NAME)
+    }
+    deleteTileLayer(args, uitl){
+        const drawable = this.getDrawableInit(uitl)
+        drawable.tileMap.deleteTileLayer(args.LAYER_NAME)
+    }
+    getTileLayers(args, uitl){
+        const drawable = this.getDrawableInit(uitl)
+        return JSON.stringify(drawable.tileMap.tileLayers)
+    }
+
     dirty() {
         this.renderer.dirty = true
         //this.renderer.draw()
