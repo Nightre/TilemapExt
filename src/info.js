@@ -233,13 +233,36 @@ export default (Scratch) => {
                     }
                 }
             },
+
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '🎳 碰撞（敬请期待）'
+                text: '🎴 图层'
+            },
+            {
+                opcode: 'joinTileMap',
+                text: '加入瓦片地图[TILEMAP]',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    TILEMAP: {
+                        type: Scratch.ArgumentType.STRING,
+                        defaultValue: "0"
+                    }
+                }
+            },
+            {
+                opcode: 'setLayerInTileMap',
+                text: '设置我的图层在瓦片地图中的第[LAYER]行显示',
+                blockType: Scratch.BlockType.COMMAND,
+                arguments: {
+                    LAYER: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
+                    }
+                }
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '🎴 图层（敬请期待）'
+                text: '🎳 碰撞（敬请期待）'
             },
         ],
         menus: {

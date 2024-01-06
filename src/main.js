@@ -82,7 +82,7 @@ class TileMapExt {
                     // 退出scratch绘制
                     this._doExitDrawRegion();
 
-                    drawable.specialDraw(projection, drawableScale);
+                    drawable.specialDraw(projection, drawableScale, drawMode, opts);
                     // 因为每次特殊绘制都会绘制scratch精灵
                     // 没必要自己再弄个区域，直接设为null
                     this._regionId = null;
@@ -116,7 +116,12 @@ class TileMapExt {
             if (opts.extraUniforms) {
                 Object.assign(uniforms, opts.extraUniforms);
             }
-
+            if (drawable.specialDrawZ) {
+                // 设置 Z 图层，直接修改modelMatrix
+                //uniforms.u_modelMatrix[13] = drawable.specialDrawZ
+                
+                twgl.m4.translate(uniforms.u_modelMatrix, [0, 0, 0.5], uniforms.u_modelMatrix)
+            }
             if (uniforms.u_skin) {
                 twgl.setTextureParameters(
                     gl, uniforms.u_skin, {
@@ -154,14 +159,17 @@ class TileMapExt {
             // drawThese里面是通过该属性判断是否绘制tilemap的
             drawable.specialDraw = null
         } else {
-            drawable.specialDraw = (projection, drawableScale) => {
+            drawable.specialDraw = (projection, drawableScale, drawMode, opts) => {
+                // TODO:改成option
                 drawable.tileMap.tileMapRender(
                     this.tileProgramInfo,
                     this.twgl,
                     this.renderer,
                     drawable,
                     projection,
-                    drawableScale
+                    drawableScale,
+                    drawMode,
+                    opts
                 )
             }
         }
@@ -296,7 +304,24 @@ class TileMapExt {
 
         return '{}'
     }
-
+    joinTileMap(args, uitl) {
+        // 获取 drawable
+        const drawable = getDrawable(uitl, this.renderer)
+        // 获取要加入的tilemap
+        const target = this.renderer._allDrawables[args.TILEMAP]
+        // 获取我之前的tilemap
+        const parent = drawable.tileMapParent
+        if (parent && parent.tileMap) {// 如果有就先退出
+            parent.removeChild(drawable)
+        }
+        drawable.specialDraw = null
+        
+        if (!target || !target.tileMap) return // 如果目标存在
+        drawable.tileMapParent = target // 那么就设置为父
+        drawable.specialDraw = () => { }// 设置specialDra让tilemap来绘制我
+        target.tileMap.addChild(drawable) // 并加入
+    }
+    setLayerInTileMap() { }
     dirty() {
         this.renderer.dirty = true
         this.renderer.draw()

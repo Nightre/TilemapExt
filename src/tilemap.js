@@ -23,6 +23,7 @@ function splitJSON(jsonObj, chunkSize) {
 
 class TileMap {
     constructor(tileExt) {
+        this.tileExt = tileExt
         this.twgl = tileExt.twgl
         this.renderer = tileExt.renderer
         this.gl = tileExt.gl
@@ -43,11 +44,14 @@ class TileMap {
         this.tileData = []
         this.buffer = this.gl.createBuffer()
         this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-
+        // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
+        this.depthBufferCache = []
+        // 记录子及其数据
+        this.children = []
     }
 
     //TODO:drawable缩放
-    tileMapRender(tileProgramInfo, twgl, renderer, drawable, projection, drawableScale) {
+    tileMapRender(tileProgramInfo, twgl, renderer, drawable, projection, drawableScale, drawMode, opts) {
         const m4 = twgl.m4
         /**@type {WebGLRenderingContext} */
         const gl = renderer._gl // :3
@@ -94,11 +98,18 @@ class TileMap {
          */
         // {number:number[]}
         let tilesTextureData = {}
-
+        this.depthBufferCache = []
         const skin = drawable.skin
+        const program = tileProgramInfo.program
+        gl.clear(gl.DEPTH_BUFFER_BIT)
+        gl.enable(gl.DEPTH_TEST)
+        gl.depthFunc(gl.LESS)
+        gl.useProgram(program)
 
         for (let y = viewId.y; y < viewId.y + drawSize.y; y++) {// 从下向上渲染
             renderOffset.x = 0
+            const depth = (y - viewId.y) / drawSize.y
+            this.depthBufferCache.push(depth)
             for (let x = viewId.x; x < viewId.x + drawSize.x; x++) {
                 /*
                 每个tile都单独
@@ -107,6 +118,7 @@ class TileMap {
                 | \|
                 3--2
                 */
+                // y - viewId.y绘制第一行的时候是0，绘制最后1后的时候是drawSize.y
                 if (x > this.mapSize.x - 1 || x < 0 || y < 0 || y > this.mapSize.y - 1) {
 
                 } else {
@@ -133,12 +145,11 @@ class TileMap {
                     const offsetX = renderOffset.x + (tile.ox ?? 0)
                     const offsetY = renderOffset.y + (tile.oy ?? 0)
 
-
                     const pos = [
-                        [offsetX         , offsetY         ,     tile.x         ,   tile.y         , textureUnit],
-                        [offsetX + tile.w, offsetY         ,     tile.x + tile.w,   tile.y         , textureUnit],
-                        [offsetX + tile.w, offsetY + tile.h,     tile.x + tile.w,   tile.y + tile.h, textureUnit],
-                        [offsetX         , offsetY + tile.h,     tile.x         ,   tile.y + tile.h, textureUnit]
+                        [offsetX, offsetY, tile.x, tile.y, textureUnit, depth],
+                        [offsetX + tile.w, offsetY, tile.x + tile.w, tile.y, textureUnit, depth],
+                        [offsetX + tile.w, offsetY + tile.h, tile.x + tile.w, tile.y + tile.h, textureUnit, depth],
+                        [offsetX, offsetY + tile.h, tile.x, tile.y + tile.h, textureUnit, depth]
                     ]
 
                     attr.push(
@@ -178,9 +189,6 @@ class TileMap {
             renderOffset.y += tileSize.y
         }
 
-        const program = tileProgramInfo.program
-        gl.useProgram(program)
-
         const modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix)
 
         // drawable的矩阵缩放会根据skin大小缩放（比如svgSkin的mip纹理每个skin都不同大小），但是tilemap不需要所以除掉
@@ -203,7 +211,7 @@ class TileMap {
         twgl.setUniforms(tileProgramInfo, unifrom)
 
         const allData = splitJSON(tilesTextureData, this.maxTextureUnits)
-        
+
         for (const dataForDrawCall of allData) {
             // one drawcall
             let _count = 0
@@ -221,6 +229,14 @@ class TileMap {
 
 
         }
+        this.children.forEach((c) => {
+
+            c.specialDrawZ = this.depthBufferCache[3]
+            debugger
+        })
+
+        renderer._drawThese(this.tileExt, this.children, drawMode, projection, opts)
+        gl.disable(gl.DEPTH_TEST)
         //gl.disable(gl.DEPTH_TEST)
         //this.bindBufferAndDraw(attr, count, program, gl)
         // 根据硬件所支持的最大纹理单元，来设置绘制
@@ -235,18 +251,23 @@ class TileMap {
 
         // 设置 aposition 属性指针
         var apositionLoc = gl.getAttribLocation(program, "aposition");
-        gl.vertexAttribPointer(apositionLoc, 2, gl.FLOAT, false, 4 * 5, 0);
+        gl.vertexAttribPointer(apositionLoc, 2, gl.FLOAT, false, 4 * 6, 0);
         gl.enableVertexAttribArray(apositionLoc);
 
         // 设置 atexcoord 属性指针
         var atexcoordLoc = gl.getAttribLocation(program, "atexcoord");
-        gl.vertexAttribPointer(atexcoordLoc, 2, gl.FLOAT, false, 4 * 5, 4 * 2);
+        gl.vertexAttribPointer(atexcoordLoc, 2, gl.FLOAT, false, 4 * 6, 4 * 2);
         gl.enableVertexAttribArray(atexcoordLoc);
 
         // 设置 atextureid 属性指针
         var atexcoordLoc = gl.getAttribLocation(program, "atextureid");
-        gl.vertexAttribPointer(atexcoordLoc, 1, gl.FLOAT, false, 4 * 5, 4 * 4);
+        gl.vertexAttribPointer(atexcoordLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
         gl.enableVertexAttribArray(atexcoordLoc);
+
+        // 设置 adepth 属性指针
+        var adepthLoc = gl.getAttribLocation(program, "adepth");
+        gl.vertexAttribPointer(adepthLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 5);
+        gl.enableVertexAttribArray(adepthLoc);
 
         gl.drawArrays(gl.TRIANGLES, 0, count)
     }
@@ -311,6 +332,15 @@ class TileMap {
         } else {
             return false;  // 如果不存在，返回 false
         }
+    }
+    addChild(c) {
+        this.children.push(c)
+    }
+    removeChild(c) {
+        this.children.splice(this.children.indexOf(c), 1)
+    }
+    setChildZ(c, z) {
+
     }
 }
 
