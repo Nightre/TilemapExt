@@ -280,7 +280,7 @@ class TileMapExt {
         // 检测目标tile是否存在
         if (this.isTileExsit(drawable, args)) return '-1'
         if (!map.isLayerExist(args.LAYER)) return '-1'
-        
+
         // 设置tile
         map.setTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1, args.TILE_ID)
         // 需要重新绘制一遍
@@ -353,8 +353,10 @@ class TileMapExt {
         // 获取 drawable
         const drawable = getDrawable(uitl, this.renderer)
         const parent = drawable.tileMapParent
+        
         if (parent && parent.tileMap) {// 如果加入了tilemap那就设置否则啥也不干
-            parent.tileMap.setChildZ(drawable._id, args.LAYER)
+            
+            parent.tileMap.setChildZ(drawable._id, args.ROW, args.LAYER)
         }
     }
     quitTilemap(args, uitl) {

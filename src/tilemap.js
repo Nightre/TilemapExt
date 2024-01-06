@@ -52,10 +52,12 @@ class TileMap {
         this.tileLayers = []
         // 所有tilemapdata数据，每一层的
         this.tileData = []
+        this.depthuUnit = 0
         this.createTileLayer("default_layer")
     }
 
-    //TODO:drawable缩放
+    // TODO:drawable缩放
+    // TODO:小数 depthRange
     tileMapRender(tileProgramInfo, twgl, renderer, drawable, projection, drawableScale, drawMode, opts) {
         const m4 = twgl.m4
         /**@type {WebGLRenderingContext} */
@@ -106,9 +108,9 @@ class TileMap {
         this.depthBufferCache = []
         const skin = drawable.skin
         const program = tileProgramInfo.program
-        
+
         // 深度单位，一行tilemap的深度的单位
-        const depthuUnit = 1/ (y - viewId.y)*drawSize.y
+        this.depthuUnit = 1 / (drawSize.y * this.tileData.length)
 
         gl.clear(gl.DEPTH_BUFFER_BIT)
         gl.enable(gl.DEPTH_TEST)
@@ -171,11 +173,13 @@ class TileMap {
             }
         }
 
-
+        // 当前深度缓冲区 step
+        let depthStep = 0
         for (let y = viewId.y; y < viewId.y + drawSize.y; y++) {// 从下向上渲染
             renderOffset.x = 0
-            const depth = (y - viewId.y) / drawSize.y
-            this.depthBufferCache.push(depth)
+            //const depth = (y - viewId.y) / drawSize.y
+
+            //this.depthBufferCache.push([])
             for (let x = viewId.x; x < viewId.x + drawSize.x; x++) {
                 /*
                 每个tile都单独
@@ -196,12 +200,14 @@ class TileMap {
                     // 遍历层
                     for (const index in this.tileData) {
                         const layerid = this.tileData.length - index - 1
-                        drawLayer(this.tileData[layerid], x, y, depth, renderOffset)
+                        drawLayer(this.tileData[layerid], x, y, depthStep + layerid * this.depthuUnit, renderOffset)
                     }
                 }
                 renderOffset.x += tileSize.x
 
             }
+            this.depthBufferCache.push(depthStep)
+            depthStep += this.depthuUnit * this.tileData.length
             renderOffset.y += tileSize.y
         }
 
@@ -399,9 +405,10 @@ class TileMap {
         delete this.children[drawableId]
         console.log(this.children, "移除精灵")
     }
-    setChildZ(drawableId, z) {
+    setChildZ(drawableId, row, layer) {
         console.log(this.children, "设置精灵图层")
-        this.children[drawableId].z = z
+
+        this.children[drawableId].z = Math.min(this.depthBufferCache[row] + layer * this.depthuUnit, 1)
     }
     isLayerExist(layerName) {
         return this.tileLayers.includes(layerName)

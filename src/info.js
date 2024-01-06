@@ -146,7 +146,7 @@ export default (Scratch) => {
                         type: Scratch.ArgumentType.NUMBER,
                         defaultValue: 0,
                     },
-                    LAYER:{
+                    LAYER: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "default_layer",
                     }
@@ -169,7 +169,7 @@ export default (Scratch) => {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "草坪",
                     },
-                    LAYER:{
+                    LAYER: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "default_layer",
                     }
@@ -192,7 +192,7 @@ export default (Scratch) => {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "草坪",
                     },
-                    LAYER:{
+                    LAYER: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "default_layer",
                     }
@@ -202,8 +202,8 @@ export default (Scratch) => {
                 opcode: 'clearAllTile',
                 text: '擦除[LAYER]层',
                 blockType: Scratch.BlockType.COMMAND,
-                arguments:{
-                    LAYER:{
+                arguments: {
+                    LAYER: {
                         type: Scratch.ArgumentType.STRING,
                         defaultValue: "default_layer",
                     }
@@ -257,12 +257,16 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setLayerInTileMap',
-                text: '图层(非原版图层)设为地图中的第[LAYER]行瓦片',
+                text: '图层(非原版图层)设为地图中的第[LAYER]层第[ROW]行瓦片',
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER: {
                         type: Scratch.ArgumentType.NUMBER,
                         menu: 0
+                    },
+                    ROW: {
+                        type: Scratch.ArgumentType.NUMBER,
+                        defaultValue: 0
                     }
 
                 }
