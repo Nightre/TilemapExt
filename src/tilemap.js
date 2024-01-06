@@ -229,13 +229,14 @@ class TileMap {
 
 
         }
+        let ids = []
         this.children.forEach((c) => {
-
             c.specialDrawZ = this.depthBufferCache[3]
-            debugger
+            //console.log("children", c)
+            ids.push(c._id)
         })
-
-        renderer._drawThese(this.tileExt, this.children, drawMode, projection, opts)
+        // 禁止skip
+        renderer._drawThese(ids, drawMode, projection, opts, false)
         gl.disable(gl.DEPTH_TEST)
         //gl.disable(gl.DEPTH_TEST)
         //this.bindBufferAndDraw(attr, count, program, gl)
@@ -289,7 +290,7 @@ class TileMap {
         // 重设瓦片地图大小
         if (w == this.mapSize.x && h == this.mapSize.y) {
             // 大小一样，不修改
-            console.log("大小一样，不修改")
+            //console.log("大小一样，不修改")
             return
         }
         this.mapSize.x = w
@@ -335,9 +336,10 @@ class TileMap {
     }
     addChild(c) {
         this.children.push(c)
+        //console.log(this.children,"添加精灵")
     }
     removeChild(c) {
-        this.children.splice(this.children.indexOf(c), 1)
+        //this.children.splice(this.children.indexOf(c), 1)
     }
     setChildZ(c, z) {
 
@@ -355,7 +357,7 @@ export function tileMapRender(tileProgramInfo, twgl, renderer, drawable, project
     if (!thisBuffer) {
         thisBuffer = gl.createBuffer()
         thisElementBuffer = gl.createBuffer()
-        console.log("创建buffer")
+        //console.log("创建buffer")
     }
 
     const scale = {

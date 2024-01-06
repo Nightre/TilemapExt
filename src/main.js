@@ -20,6 +20,7 @@ class TileMapExt {
 
         this.renderer._drawThese = (..._arguments) => {
             _arguments.unshift(this) // 在参数前加个自生，这样drawThese就可以获取到我自生的东西
+
             this.drawThese.call(this.renderer, ..._arguments) // 调用
         };
 
@@ -34,9 +35,9 @@ class TileMapExt {
 
     // 修改scratch-render webglrender的_drawThese函数
     // 我修改的地方都标注了 ”By: Nights“
-    drawThese(ext, drawables, drawMode, projection, opts = {}) {
+    drawThese(ext, drawables, drawMode, projection, opts = {}, canSkip = true/* 是否允许跳过绘制 By: Nights */) {
         const gl = this._gl;
-
+        
         // 检测是否需要tilemap（碰到x颜色GPU运算，选取颜色等都不渲染）
         // 根据我的研究，scratch-render在碰撞像素>一个cpu检测MAX值时会使用GPU颜色检测
         // 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch物体的projection，是的化就绘制
@@ -77,6 +78,13 @@ class TileMapExt {
 
             // Skip private skins, if requested.
             if (opts.skipPrivateSkins && drawable.skin.private) continue;
+
+            if (drawable.skipDraw && canSkip) {
+                // 有时候可能需要跳过绘制
+                // 比如在tilemap图层里面的绘制的，普通的draw就允许跳过，如果在tilemap层里就禁止跳过
+                continue
+            }
+
             if (drawable.specialDraw) { //By:nights 检测是否是特殊绘制
                 if (allowSpecialDraw) {
                     // 退出scratch绘制
@@ -118,9 +126,10 @@ class TileMapExt {
             }
             if (drawable.specialDrawZ) {
                 // 设置 Z 图层，直接修改modelMatrix
-                //uniforms.u_modelMatrix[13] = drawable.specialDrawZ
-                
-                twgl.m4.translate(uniforms.u_modelMatrix, [0, 0, 0.5], uniforms.u_modelMatrix)
+                uniforms.u_modelMatrix[14] = drawable.specialDrawZ
+                //debugger
+                //twgl.m4.translate(uniforms.u_modelMatrix, [0, 0, 0.1], uniforms.u_modelMatrix)
+
             }
             if (uniforms.u_skin) {
                 twgl.setTextureParameters(
@@ -146,7 +155,7 @@ class TileMapExt {
             // 初始化视点
             drawable.tileViewX = 0
             drawable.tileViewY = 0
-
+            drawable.skipDraw = false
             drawable.tileMap = new TileMap(this)
         }
     }
@@ -312,13 +321,12 @@ class TileMapExt {
         // 获取我之前的tilemap
         const parent = drawable.tileMapParent
         if (parent && parent.tileMap) {// 如果有就先退出
-            parent.removeChild(drawable)
+            parent.tileMap.removeChild(drawable)
         }
-        drawable.specialDraw = null
-        
+        drawable.skipDraw = false
         if (!target || !target.tileMap) return // 如果目标存在
+        drawable.skipDraw = true
         drawable.tileMapParent = target // 那么就设置为父
-        drawable.specialDraw = () => { }// 设置specialDra让tilemap来绘制我
         target.tileMap.addChild(drawable) // 并加入
     }
     setLayerInTileMap() { }
