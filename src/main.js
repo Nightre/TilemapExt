@@ -265,17 +265,24 @@ class TileMapExt {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
         // 检测目标tile是否存在
+        const map = drawable.tileMap
         if (this.isTileExsit(drawable, args)) return '-1'
+        if (!map.isLayerExist(args.LAYER)) return '-1'
+
         // 获取tile
-        return drawable.tileMap.getTile(args.LAYER, args.X - 1, args.Y - 1)
+
+        return map.getTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1)
     }
     setTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
+        const map = drawable.tileMap
         // 检测目标tile是否存在
         if (this.isTileExsit(drawable, args)) return '-1'
+        if (!map.isLayerExist(args.LAYER)) return '-1'
+        
         // 设置tile
-        drawable.tileMap.setTile(args.LAYER, args.X - 1, args.Y - 1, args.TILE_ID)
+        map.setTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1, args.TILE_ID)
         // 需要重新绘制一遍
         // 不能每次调用都绘制因为可能在同一帧里面调用多次
         this.tileChanged = true
@@ -284,19 +291,23 @@ class TileMapExt {
     clearTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
+        const map = drawable.tileMap
         // 检测目标tile是否存在
         if (this.isTileExsit(drawable, args)) return '-1'
-
+        if (!map.isLayerExist(args.LAYER)) return '-1'
         // 设置tile
-        drawable.tileMap.setTile(args.LAYER, args.X - 1, args.Y - 1, -1)
+        map.setTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1, -1)
         // 需要重新绘制一遍
         this.dirty()
     }
     clearAllTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
+        const map = drawable.tileMap
+        if (!map.isLayerExist(args.LAYER)) return '-1'
+
         // 清除
-        drawable.tileMap.clearAllTile(args.LAYER)
+        map.clearAllTile(map.getLayerByName(args.LAYER))
         // 需要重新绘制一遍
         this.dirty()
     }

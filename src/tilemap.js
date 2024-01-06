@@ -129,11 +129,13 @@ class TileMap {
 
                 } else {
                     // 检测是否存在这个tiledata里
-                    if (!this.isElementExist(this.tileData, x, y)) {
+                    // 该层面的数据
+                    const data2d = this.allTileData[0]//TODO
+                    if (!this.isElementExist(data2d, x, y)) {
                         renderOffset.x += tileSize.x
                         continue
                     }
-                    const tileId = this.tileData[y][x]
+                    const tileId = data2d[y][x]
                     const tile = this.tileSet[tileId]
 
                     if (!tile) {
@@ -288,24 +290,23 @@ class TileMap {
         gl.drawArrays(gl.TRIANGLES, 0, count)
     }
 
-    setTile(layer, x, y, t) {
-        //TODO
-        this.tileData[layer][y][x] = t
-        this.tileData[y][x] = t
+    setTile(layer , x, y, t) {
+        this.allTileData[layer][y][x] = t
+        //this.tileData[y][x] = t
     }
-    getTile(layer, x, y) {
-        this.tileLayers[layer][y][x] //TODO
-        return this.tileData[y][x]
+    getTile(layer , x, y) {
+        return this.allTileData[layer][y][x]
+        //return this.tileData[y][x]
     }
-    clearAllTile(layer) {
-        //TODO
-        for (const y in this.tileData) {
-            for (const x in this.tileData[y]) {
-                this.setTile(x, y, -1)
-            }
-        }
+    clearAllTile(layer ) {
 
-        const targetLayer = this.tileLayers[layer]
+        // for (const y in this.tileData) {
+        //     for (const x in this.tileData[y]) {
+        //         this.setTile(x, y, -1)
+        //     }
+        // }
+
+        const targetLayer = this.allTileData[layer]
         for (const y in targetLayer) {
             for (const x in targetLayer[y]) {
                 this.setTile(layer, x, y, -1)
@@ -327,9 +328,9 @@ class TileMap {
         // 修改
         this.tileData = this.create2DArray(w, h, this.tileData)
         for (const tileDataIndex in this.allTileData) {
-            let tileData = this.allTileData[tileDataIndex]
-            tileData = this.create2DArray(w, h, tileData)
+            this.allTileData[tileDataIndex] = this.create2DArray(w, h, this.allTileData[tileDataIndex])
         }
+        
     }
     create2DArray(w, h, old = []) {
         //TODO:可以检测，如果是比old大的就直接在old上面改，减小开销
@@ -402,6 +403,12 @@ class TileMap {
     setChildZ(drawableId, z) {
         console.log(this.children, "设置精灵图层")
         this.children[drawableId].z = z
+    }
+    isLayerExist(layerName) {
+        return this.tileLayers.includes(layerName)
+    }
+    getLayerByName(layerName){
+        return this.tileLayers.indexOf(layerName)
     }
 }
 
