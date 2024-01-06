@@ -339,7 +339,7 @@ class TileMapExt {
     }
     dirty() {
         this.renderer.dirty = true
-        this.renderer.draw()
+        //this.renderer.draw()
     }
     /**
      * 获取drawable并且检测tilemap是否初始化，若未初始化则
