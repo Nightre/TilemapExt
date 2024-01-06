@@ -37,7 +37,7 @@ class TileMapExt {
     // 我修改的地方都标注了 ”By: Nights“
     drawThese(ext, drawables, drawMode, projection, opts = {}, canSkip = true/* 是否允许跳过绘制 By: Nights */) {
         const gl = this._gl;
-        
+
         // 检测是否需要tilemap（碰到x颜色GPU运算，选取颜色等都不渲染）
         // 根据我的研究，scratch-render在碰撞像素>一个cpu检测MAX值时会使用GPU颜色检测
         // 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch物体的projection，是的化就绘制
@@ -79,7 +79,7 @@ class TileMapExt {
             // Skip private skins, if requested.
             if (opts.skipPrivateSkins && drawable.skin.private) continue;
 
-            if (drawable.skipDraw && canSkip) {
+            if (drawable.skipDraw && canSkip && allowSpecialDraw) { // 必须是在允许特殊绘制时才能跳过
                 // 有时候可能需要跳过绘制
                 // 比如在tilemap图层里面的绘制的，普通的draw就允许跳过，如果在tilemap层里就禁止跳过
                 continue
@@ -321,15 +321,22 @@ class TileMapExt {
         // 获取我之前的tilemap
         const parent = drawable.tileMapParent
         if (parent && parent.tileMap) {// 如果有就先退出
-            parent.tileMap.removeChild(drawable)
+            parent.tileMap.removeChild(drawable._id)
         }
         drawable.skipDraw = false
         if (!target || !target.tileMap) return // 如果目标存在
-        drawable.skipDraw = true
+        drawable.skipDraw = true // 设置跳过，不绘制，tilemap来绘制
         drawable.tileMapParent = target // 那么就设置为父
-        target.tileMap.addChild(drawable) // 并加入
+        target.tileMap.addChild(drawable._id) // 并加入
     }
-    setLayerInTileMap() { }
+    setLayerInTileMap(args, uitl) {
+        // 获取 drawable
+        const drawable = getDrawable(uitl, this.renderer)
+        const parent = drawable.tileMapParent
+        if (parent && parent.tileMap) {// 如果加入了tilemap那就设置否则啥也不干
+            parent.tileMap.setChildZ(drawable._id, args.LAYER)
+        }
+    }
     dirty() {
         this.renderer.dirty = true
         this.renderer.draw()

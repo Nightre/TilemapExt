@@ -47,7 +47,7 @@ class TileMap {
         // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
         this.depthBufferCache = []
         // 记录子及其数据
-        this.children = []
+        this.children = {}
     }
 
     //TODO:drawable缩放
@@ -230,20 +230,16 @@ class TileMap {
 
         }
         let ids = []
-        this.children.forEach((c) => {
-            c.specialDrawZ = this.depthBufferCache[3]
-            //console.log("children", c)
-            ids.push(c._id)
-        })
-        // 禁止skip
+        for (const drawableId in this.children) {
+            ids.push(drawableId)
+            const drawable = renderer._allDrawables[drawableId]
+            const data = this.children[drawableId]//this.children的data
+            console.log(data)
+            drawable.specialDrawZ = this.depthBufferCache[data.z]
+        }
+        // 禁止skip，绘制所有子
         renderer._drawThese(ids, drawMode, projection, opts, false)
         gl.disable(gl.DEPTH_TEST)
-        //gl.disable(gl.DEPTH_TEST)
-        //this.bindBufferAndDraw(attr, count, program, gl)
-        // 根据硬件所支持的最大纹理单元，来设置绘制
-        //tileTextureData用于记录每个tile.texture需要绘制的数据
-
-
     }
 
     bindBufferAndDraw(attr, count, program, gl) {
@@ -334,15 +330,17 @@ class TileMap {
             return false;  // 如果不存在，返回 false
         }
     }
-    addChild(c) {
-        this.children.push(c)
-        //console.log(this.children,"添加精灵")
+    addChild(drawableId) {
+        this.children[drawableId] = { z: 0 }
+        console.log(this.children, "添加精灵")
     }
-    removeChild(c) {
-        //this.children.splice(this.children.indexOf(c), 1)
+    removeChild(drawableId) {
+        console.log(this.children, "移除精灵")
+        delete this.children[drawableId]
     }
-    setChildZ(c, z) {
-
+    setChildZ(drawableId, z) {
+        console.log(this.children, "设置精灵图层")
+        this.children[drawableId].z = z
     }
 }
 
