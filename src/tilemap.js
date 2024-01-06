@@ -208,6 +208,7 @@ class TileMap {
             }
             this.depthBufferCache.push(depthStep)
             depthStep += this.depthuUnit * this.tileData.length
+            console.log(depthStep)
             renderOffset.y += tileSize.y
         }
 
@@ -259,18 +260,12 @@ class TileMap {
             //this.children的data
             const data = this.children[drawableId]
             // 当前绘制的第几个tile的z
-            const index = data.z - viewId.y
-            // 计算是否超出了绘制了的tile
-            if (index > this.depthBufferCache.length - 1) {
-                // 若超出了，就设为 1 
-                drawable.specialDrawZ = 1
-                continue
-            }
-            // 没有超出
-            drawable.specialDrawZ = this.depthBufferCache[index]
-            if (!drawable.specialDrawZ) { // 0 or undfined
-                drawable.specialDrawZ = -1
-            }
+            const rowIndex = (data.row - viewId.y) * this.depthuUnit
+            const layerIndex = data.layer * this.depthuUnit //TODO:有问题
+            console.log("data", data)
+            let z = rowIndex + layerIndex
+            z = Math.min(Math.max(z, 0), 1)
+            drawable.specialDrawZ = z //this.depthBufferCache[index]
         }
         // 禁止skip，绘制所有子
         renderer._drawThese(ids, drawMode, projection, opts, false)
@@ -406,9 +401,11 @@ class TileMap {
         console.log(this.children, "移除精灵")
     }
     setChildZ(drawableId, row, layer) {
-        console.log(this.children, "设置精灵图层")
+        console.log(row, layer, "设置精灵图层")
 
-        this.children[drawableId].z = Math.min(this.depthBufferCache[row] + layer * this.depthuUnit, 1)
+        this.children[drawableId] = {
+            row, layer
+        }//Math.min(this.depthBufferCache[row] + layer * this.depthuUnit, 1)
     }
     isLayerExist(layerName) {
         return this.tileLayers.includes(layerName)
