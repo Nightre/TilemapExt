@@ -43,7 +43,8 @@ class TileMap {
         this.tileSet = {}
 
         this.buffer = this.gl.createBuffer()
-        this.maxTextureUnits = 1//this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+        this.indexBuffer = this.gl.createBuffer()
+        this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
         this.depthBufferCache = []
         // 记录子及其数据
@@ -150,7 +151,7 @@ class TileMap {
                     ...pos[3],
 
                 )
-                count += 6
+                count += 4
                 /**
                  * tileTextureData用于记录每个tile.texture需要绘制的数据
                  */
@@ -160,13 +161,10 @@ class TileMap {
                         buffer: []
                     }
                 }
-                tilesTextureData[tile.texture].count += 6
+                tilesTextureData[tile.texture].count += 4
                 tilesTextureData[tile.texture].buffer.push(
                     ...pos[0],
                     ...pos[1],
-                    ...pos[2],
-
-                    ...pos[0],
                     ...pos[2],
                     ...pos[3],
                 )
