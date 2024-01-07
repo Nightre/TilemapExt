@@ -43,7 +43,7 @@ class TileMap {
         this.tileSet = {}
 
         this.buffer = this.gl.createBuffer()
-        this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+        this.maxTextureUnits = 1//this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
         this.depthBufferCache = []
         // 记录子及其数据
@@ -208,10 +208,10 @@ class TileMap {
             }
             this.depthBufferCache.push(depthStep)
             depthStep += this.depthuUnit * this.tileData.length
-            //console.log(depthStep)
+            ////console.log(depthStep)
             renderOffset.y += tileSize.y
         }
-
+        //console.log(tilesTextureData)
         const modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix)
 
         // drawable的矩阵缩放会根据skin大小缩放（比如svgSkin的mip纹理每个skin都不同大小），但是tilemap不需要所以除掉
@@ -230,7 +230,7 @@ class TileMap {
             u_modelProjectionMatrix: m4.multiply(projection, modelMatrix)
         }
 
-        
+
 
         const allData = splitJSON(tilesTextureData, this.maxTextureUnits)
 
@@ -244,10 +244,10 @@ class TileMap {
             for (const costumeId in dataForDrawCall) {
                 const data = dataForDrawCall[costumeId]
                 _count += data.count
-                arr.concat(data.buffer)
+                arr.push(...data.buffer)
 
                 const skinId = target.sprite.costumes[costumeId].skinId
-                const skin = drawable.skin
+                const skin = renderer._allSkins[skinId]
                 u_skins.push(skin.getTexture(drawableScale))
                 u_skinSizes.push(...skin.size)
             }
@@ -255,11 +255,10 @@ class TileMap {
                 u_skins, u_skinSizes
             })
             twgl.setUniforms(tileProgramInfo, unifrom)
-            console.log(unifrom)
-            this.bindBufferAndDraw(attr, _count, program, gl)
-
-
+            
+            this.bindBufferAndDraw(arr, _count, program, gl)
         }
+        console.log(tilesTextureData, allData)
         let ids = []
         for (const drawableId in this.children) {
             ids.push(drawableId)
@@ -270,7 +269,7 @@ class TileMap {
             // 当前绘制的第几个tile的z
             const rowIndex = (data.row - viewId.y) * this.depthuUnit
             const layerIndex = data.layer * this.depthuUnit //TODO:有问题
-            //console.log("data", data)
+            ////console.log("data", data)
             let z = rowIndex + layerIndex
             z = Math.min(Math.max(z, 0), 1)
             drawable.specialDrawZ = z //this.depthBufferCache[index]
@@ -285,22 +284,22 @@ class TileMap {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attr), gl.DYNAMIC_DRAW)
 
         // 设置 aposition 属性指针
-        var apositionLoc = gl.getAttribLocation(program, "aposition");
+        var apositionLoc = gl.getAttribLocation(program, "a_position");
         gl.vertexAttribPointer(apositionLoc, 2, gl.FLOAT, false, 4 * 6, 0);
         gl.enableVertexAttribArray(apositionLoc);
 
         // 设置 atexcoord 属性指针
-        var atexcoordLoc = gl.getAttribLocation(program, "atexcoord");
+        var atexcoordLoc = gl.getAttribLocation(program, "a_texcoord");
         gl.vertexAttribPointer(atexcoordLoc, 2, gl.FLOAT, false, 4 * 6, 4 * 2);
         gl.enableVertexAttribArray(atexcoordLoc);
 
         //设置 atextureid 属性指针
-        var atexidLoc = gl.getAttribLocation(program, "atextureid");
+        var atexidLoc = gl.getAttribLocation(program, "a_textureid");
         gl.vertexAttribPointer(atexidLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
         gl.enableVertexAttribArray(atexidLoc);
 
         // 设置 adepth 属性指针
-        var adepthLoc = gl.getAttribLocation(program, "adepth");
+        var adepthLoc = gl.getAttribLocation(program, "a_depth");
         gl.vertexAttribPointer(adepthLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 5);
         gl.enableVertexAttribArray(adepthLoc);
 
@@ -325,7 +324,7 @@ class TileMap {
         // 重设瓦片地图大小
         if (w === this.mapSize.x && h === this.mapSize.y) {
             // 大小一样，不修改
-            ////console.log("大小一样，不修改")
+            //////console.log("大小一样，不修改")
             return
         }
 
@@ -389,7 +388,7 @@ class TileMap {
     }
     deleteTileLayer(name) {
         if (name == 'default_layer') {
-            //console.warn("默认图层不可删除")
+            ////console.warn("默认图层不可删除")
             return
         }
         let index = this.tileLayers.indexOf(name)
@@ -401,15 +400,15 @@ class TileMap {
 
     addChild(drawableId) {
         this.children[drawableId] = { z: 0 }
-        //console.log(this.children, "添加精灵")
+        ////console.log(this.children, "添加精灵")
     }
     removeChild(drawableId) {
         this.renderer._allDrawables[drawableId].specialDrawZ = null
         delete this.children[drawableId]
-        //console.log(this.children, "移除精灵")
+        ////console.log(this.children, "移除精灵")
     }
     setChildZ(drawableId, row, layer) {
-        //console.log(row, layer, "设置精灵图层")
+        ////console.log(row, layer, "设置精灵图层")
 
         this.children[drawableId] = {
             row, layer

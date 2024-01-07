@@ -27,10 +27,22 @@ class TileMapExt {
 
         this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         this.tileChanged = false
-        // 设置宏，获取该设备支持的最多纹理单元，批量渲染时需要
+        // 获取该设备支持的最多纹理单元，批量渲染时需要
+        var fscode = fs.replaceAll('SKIN_NUM', this.maxTextureUnits)
+        // 由于webgl1 片元着色器不支持动态数组获取所以手动ifelse判定
+        let color_if = ''
+        for (let index = 0; index < this.maxTextureUnits; index++) {
+            color_if += `if(textureid==${index}){color = texture2D(u_skins[${index}], v_texcoord);}`
+            if (index != this.maxTextureUnits - 1) {
+                color_if += 'else '
+            }
+        }
+        console.log(fscode)
+        fscode = fscode.replaceAll('COLOR_IF_GET', color_if)
+        console.log(fscode, color_if)
         this.tileProgramInfo = this.twgl.createProgramInfo(this.gl, [
-            '#define SKIN_NUM ' + this.maxTextureUnits + '\n' + vs,
-            '#define SKIN_NUM ' + this.maxTextureUnits + '\n' + fs
+            vs.replaceAll('SKIN_NUM', this.maxTextureUnits),
+            fscode
         ]);
     }
 
@@ -354,9 +366,9 @@ class TileMapExt {
         // 获取 drawable
         const drawable = getDrawable(uitl, this.renderer)
         const parent = drawable.tileMapParent
-        
+
         if (parent && parent.tileMap) {// 如果加入了tilemap那就设置否则啥也不干
-            
+
             parent.tileMap.setChildZ(drawable._id, args.ROW, args.LAYER)
         }
     }
