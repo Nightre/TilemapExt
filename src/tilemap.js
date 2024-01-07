@@ -100,7 +100,7 @@ class TileMap {
             y: 0
         }
         let attr = []
-        let count = 0
+
         /**
          * tileTextureData用于记录每个tile.texture需要绘制的数据
          */
@@ -151,22 +151,33 @@ class TileMap {
                     ...pos[3],
 
                 )
-                count += 4
+
                 /**
                  * tileTextureData用于记录每个tile.texture需要绘制的数据
                  */
                 if (!tilesTextureData[tile.texture]) {
                     tilesTextureData[tile.texture] = {
                         count: 0,
-                        buffer: []
+                        buffer: [],
+                        index: []
                     }
                 }
-                tilesTextureData[tile.texture].count += 4
+                const bufferLength = tilesTextureData[tile.texture].buffer.length / 6
+                tilesTextureData[tile.texture].count += 6
                 tilesTextureData[tile.texture].buffer.push(
                     ...pos[0],
                     ...pos[1],
                     ...pos[2],
                     ...pos[3],
+                )
+                tilesTextureData[tile.texture].index.push(
+                    bufferLength,
+                    bufferLength + 1,
+                    bufferLength + 2,
+
+                    bufferLength,
+                    bufferLength + 2,
+                    bufferLength + 3,
                 )
             }
         }
@@ -234,16 +245,18 @@ class TileMap {
 
         for (const dataForDrawCall of allData) {
             // one drawcall
-            let _count = 0
-            let arr = []
+            let count = 0
+            let attribute = []
+            let index = []
+
             let u_skins = []
             let u_skinSizes = []
 
             for (const costumeId in dataForDrawCall) {
                 const data = dataForDrawCall[costumeId]
-                _count += data.count
-                arr.push(...data.buffer)
-
+                count = count + data.count
+                attribute.push(...data.buffer)
+                index.push(...data.index)
                 const skinId = target.sprite.costumes[costumeId].skinId
                 const skin = renderer._allSkins[skinId]
                 u_skins.push(skin.getTexture(drawableScale))
@@ -253,8 +266,8 @@ class TileMap {
                 u_skins, u_skinSizes
             })
             twgl.setUniforms(tileProgramInfo, unifrom)
-            
-            this.bindBufferAndDraw(arr, _count, program, gl)
+
+            this.bindBufferAndDraw(attribute, index, count, program, gl)
         }
         console.log(tilesTextureData, allData)
         let ids = []
@@ -277,7 +290,7 @@ class TileMap {
         gl.disable(gl.DEPTH_TEST)
     }
 
-    bindBufferAndDraw(attr, count, program, gl) {
+    bindBufferAndDraw(attr, index, count, program, gl) {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attr), gl.DYNAMIC_DRAW)
 
@@ -301,7 +314,12 @@ class TileMap {
         gl.vertexAttribPointer(adepthLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 5);
         gl.enableVertexAttribArray(adepthLoc);
 
-        gl.drawArrays(gl.TRIANGLES, 0, count)
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(index), gl.STATIC_DRAW);
+
+        //gl.drawArrays(gl.TRIANGLES, 0, count)
+        console.log(count)
+        gl.drawElements(gl.TRIANGLES, count + 6 * 3, gl.UNSIGNED_SHORT, 0);
     }
 
     setTile(layer, x, y, t) {
