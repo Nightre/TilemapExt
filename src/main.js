@@ -41,7 +41,7 @@ class TileMapExt {
 
         // 检测是否需要tilemap（碰到x颜色GPU运算，选取颜色等都不渲染）
         // 根据我的研究，scratch-render在碰撞像素>一个cpu检测MAX值时会使用GPU颜色检测
-        // 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch物体的projection，是的化就绘制
+        // 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch舞台的projection，是的化就绘制
         const allowSpecialDraw = projection == this._projection // By:nights
 
         let currentShader = null;
@@ -180,7 +180,8 @@ class TileMapExt {
                     projection,
                     drawableScale,
                     drawMode,
-                    opts
+                    opts,
+                    util.target
                 )
             }
         }

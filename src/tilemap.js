@@ -58,7 +58,7 @@ class TileMap {
 
     // TODO:drawable缩放
     // TODO:小数 depthRange
-    tileMapRender(tileProgramInfo, twgl, renderer, drawable, projection, drawableScale, drawMode, opts) {
+    tileMapRender(tileProgramInfo, twgl, renderer, drawable, projection, drawableScale, drawMode, opts, target) {
         const m4 = twgl.m4
         /**@type {WebGLRenderingContext} */
         const gl = renderer._gl // :3
@@ -208,7 +208,7 @@ class TileMap {
             }
             this.depthBufferCache.push(depthStep)
             depthStep += this.depthuUnit * this.tileData.length
-            console.log(depthStep)
+            //console.log(depthStep)
             renderOffset.y += tileSize.y
         }
 
@@ -239,15 +239,24 @@ class TileMap {
             // one drawcall
             let _count = 0
             let arr = []
-            let skins = []
-            let skinSizes = []
+            let u_skins = []
+            let u_skinSizes = []
 
-            for (const skinId in dataForDrawCall) {
-                const data = dataForDrawCall[skinId]
+            for (const costumeId in dataForDrawCall) {
+                const data = dataForDrawCall[costumeId]
                 _count += data.count
                 arr.concat(data.buffer)
-            }
 
+                const skinId = target.sprite.costumes[costumeId].skinId
+                //const skin = renderer._allSkins[skinId]
+                console.log(target.sprite)
+                u_skins.push(skin.getTexture(drawableScale))
+                u_skinSizes.push(...skin.size)
+            }
+            Object.assign(unifrom, {
+                u_skins, u_skinSizes
+            })
+            //console.log(unifrom)
             this.bindBufferAndDraw(attr, _count, program, gl)
 
 
@@ -262,7 +271,7 @@ class TileMap {
             // 当前绘制的第几个tile的z
             const rowIndex = (data.row - viewId.y) * this.depthuUnit
             const layerIndex = data.layer * this.depthuUnit //TODO:有问题
-            console.log("data", data)
+            //console.log("data", data)
             let z = rowIndex + layerIndex
             z = Math.min(Math.max(z, 0), 1)
             drawable.specialDrawZ = z //this.depthBufferCache[index]
@@ -286,10 +295,10 @@ class TileMap {
         gl.vertexAttribPointer(atexcoordLoc, 2, gl.FLOAT, false, 4 * 6, 4 * 2);
         gl.enableVertexAttribArray(atexcoordLoc);
 
-        // 设置 atextureid 属性指针
-        // var atexcoordLoc = gl.getAttribLocation(program, "atextureid");
-        // gl.vertexAttribPointer(atexcoordLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
-        // gl.enableVertexAttribArray(atexcoordLoc);
+        //设置 atextureid 属性指针
+        var atexidLoc = gl.getAttribLocation(program, "atextureid");
+        gl.vertexAttribPointer(atexidLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 4);
+        gl.enableVertexAttribArray(atexidLoc);
 
         // 设置 adepth 属性指针
         var adepthLoc = gl.getAttribLocation(program, "adepth");
@@ -317,7 +326,7 @@ class TileMap {
         // 重设瓦片地图大小
         if (w === this.mapSize.x && h === this.mapSize.y) {
             // 大小一样，不修改
-            //console.log("大小一样，不修改")
+            ////console.log("大小一样，不修改")
             return
         }
 
@@ -381,7 +390,7 @@ class TileMap {
     }
     deleteTileLayer(name) {
         if (name == 'default_layer') {
-            console.warn("默认图层不可删除")
+            //console.warn("默认图层不可删除")
             return
         }
         let index = this.tileLayers.indexOf(name)
@@ -393,15 +402,15 @@ class TileMap {
 
     addChild(drawableId) {
         this.children[drawableId] = { z: 0 }
-        console.log(this.children, "添加精灵")
+        //console.log(this.children, "添加精灵")
     }
     removeChild(drawableId) {
         this.renderer._allDrawables[drawableId].specialDrawZ = null
         delete this.children[drawableId]
-        console.log(this.children, "移除精灵")
+        //console.log(this.children, "移除精灵")
     }
     setChildZ(drawableId, row, layer) {
-        console.log(row, layer, "设置精灵图层")
+        //console.log(row, layer, "设置精灵图层")
 
         this.children[drawableId] = {
             row, layer

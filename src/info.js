@@ -282,7 +282,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'tileToPos',
-                text: '获取地图中[X][Y]瓦片的[POSITION]',
+                text: '地图中第[X](x)列第[Y](y)行的瓦片的[POSITION]坐标',
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -301,7 +301,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'posToTile',
-                text: '获取[X][Y]位置的瓦片在地图中[POSITION]',
+                text: '位于x:[X]y:[Y]位置的瓦片是在地图中的第几[POSITION_TILEMAP]？',
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -312,9 +312,9 @@ export default (Scratch) => {
                         type: Scratch.ArgumentType.NUMBER,
                         defaultValue: 0,
                     },
-                    POSITION: {
+                    POSITION_TILEMAP: {
                         type: Scratch.ArgumentType.STRING,
-                        menu: 'POSITION'
+                        menu: 'POSITION_TILEMAP'
                     }
                 }
             },
@@ -345,6 +345,18 @@ export default (Scratch) => {
                     {
                         value: POSITION.Y,
                         text: 'y',
+                    },
+                ]
+            },
+            POSITION_TILEMAP:{
+                items: [
+                    {
+                        value: POSITION.X,
+                        text: '列',
+                    },
+                    {
+                        value: POSITION.Y,
+                        text: '行',
                     },
                 ]
             },
