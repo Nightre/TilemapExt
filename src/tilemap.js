@@ -106,7 +106,7 @@ class TileMap {
         // {number:number[]}
         let tilesTextureData = {}
         this.depthBufferCache = []
-        const skin = drawable.skin
+
         const program = tileProgramInfo.program
 
         // 深度单位，一行tilemap的深度的单位
@@ -230,8 +230,7 @@ class TileMap {
             u_modelProjectionMatrix: m4.multiply(projection, modelMatrix)
         }
 
-        Object.assign(unifrom, skin.getUniforms(drawableScale))
-        twgl.setUniforms(tileProgramInfo, unifrom)
+        
 
         const allData = splitJSON(tilesTextureData, this.maxTextureUnits)
 
@@ -248,15 +247,15 @@ class TileMap {
                 arr.concat(data.buffer)
 
                 const skinId = target.sprite.costumes[costumeId].skinId
-                //const skin = renderer._allSkins[skinId]
-                console.log(target.sprite)
+                const skin = drawable.skin
                 u_skins.push(skin.getTexture(drawableScale))
                 u_skinSizes.push(...skin.size)
             }
             Object.assign(unifrom, {
                 u_skins, u_skinSizes
             })
-            //console.log(unifrom)
+            twgl.setUniforms(tileProgramInfo, unifrom)
+            console.log(unifrom)
             this.bindBufferAndDraw(attr, _count, program, gl)
 
 

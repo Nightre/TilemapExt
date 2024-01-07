@@ -1,19 +1,17 @@
-attribute vec2 aposition;
-attribute vec2 atexcoord;
-attribute float atextureid;
-attribute float adepth;
-//uniform mat4 u_projectionMatrix;
-//uniform mat4 u_modelMatrix;
+attribute vec2 a_position;
+attribute vec2 a_texcoord;
+attribute float a_textureid;
+attribute float a_depth;
+
 uniform mat4 u_modelProjectionMatrix;
-uniform vec2 u_skinSize;
 uniform vec2 u_skinSizes[SKIN_NUM];
 
 varying vec2 v_texcoord;
 varying float v_textureid;
 
 void main() {
-    int textureid = int(atextureid);
-    gl_Position = u_modelProjectionMatrix*vec4(aposition, adepth, 1.0);
-    v_texcoord = atexcoord/u_skinSize[textureid];
-    v_textureid = atextureid;
+    int textureid = int(a_textureid);
+    gl_Position = u_modelProjectionMatrix*vec4(a_position, a_depth, 1.0);
+    v_texcoord = a_texcoord/u_skinSizes[textureid];
+    v_textureid = a_textureid;
 }

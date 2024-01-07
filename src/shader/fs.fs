@@ -2,7 +2,6 @@ precision mediump float;
 
 varying vec2 v_texcoord;
 varying float v_textureid;
-uniform sampler2D u_skin;
 uniform sampler2D u_skins[SKIN_NUM];
 
 void main() {
