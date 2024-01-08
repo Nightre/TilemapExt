@@ -22,7 +22,8 @@ drawable如果有specialSkip那么scratch-render调用时就不会渲染该drawa
 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch舞台的projection并且DrawMode==‘default’，是的化就绘制
 */
 // 模式
-const mode = MODE.GANDI_PRODUCT
+// 改成仅用于获取runtime时判定
+const mode = MODE.GANDI
 
 class TileMapExt {
     constructor(runtime) {
@@ -475,33 +476,5 @@ class TileMapExt {
     }
 }
 
-if (mode === MODE.GANDI_DEV) {
-    window.tempExt = {
-        Extension: TileMapExt,
-        info: {
-            name: 'nights.Tilemap.extensionName',
-            description: 'nights.Tilemap.description',
-            extensionId: 'nightsTilemap',
-            // iconURL: icon,
-            // insetIconURL: cover,
-            featured: true,
-            disabled: false,
-        },
-        l10n: {
-            'zh-cn': {
-                'nights.Tilemap.extensionName': '瓦片地图',
-                'nights.Tilemap.description': '高性能瓦片地图渲染，快有点意思...',
-            },
-            'en': {
-                'nights.Tilemap.extensionName': 'Tilemap',
-                'nights.Tilemap.description': 'High-performance tile map rendering, it\'s getting interestingly fast...',
-            },
-        },
-    }
-} else if (mode == MODE.TURBOWARP) {
-    Scratch.extensions.register(new TileMapExt());
-} else if (mode == MODE.GANDI_PRODUCT) {
-
-}
-
+Scratch.extensions.register(new TileMapExt());
 export default TileMapExt

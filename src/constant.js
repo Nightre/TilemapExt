@@ -9,9 +9,8 @@ const POSITION = {
 }
 
 const MODE = {
-    GANDI_DEV: 0,
+    GANDI: 0,
     TURBOWARP: 1,
-    GANDI_PRODUCT: 2
 }
 
 export {

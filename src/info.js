@@ -1,24 +1,23 @@
 import { SHOW_MODE, POSITION, MODE } from "./constant"
 import translation_map from "./lang"
 
-export default (Scratch, mode) => {
-
-    const t = (s) => {
-        return Scratch.translate({ id: s, default: s }) ?? s
+export default (Scratch) => {
+    const translate = (s) => {
+        return Scratch.translate({ id: s, default: translation_map.en[s] })
     }
     Scratch.translate.setup(translation_map)
     const info = {
         id: 'nightstilemap',
-        name: t('nights.tilemap.name'),
+        name: translate('nights.tilemap.name'),
         blocks: [
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.basic')
+                text: translate('nights.tilemap.basic')
             },
             {
                 opcode: 'show',
                 blockType: Scratch.BlockType.COMMAND,
-                text: t('nights.tilemap.show'),
+                text: translate('nights.tilemap.show'),
                 arguments: {
                     SHOW_MODE: {
                         type: Scratch.ArgumentType.STRING,
@@ -28,7 +27,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'setTileSize',
-                text: t('nights.tilemap.setTileSize'),
+                text: translate('nights.tilemap.setTileSize'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     W: {
@@ -43,7 +42,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'setMapSize',
-                text: t('nights.tilemap.setMapSize'),
+                text: translate('nights.tilemap.setMapSize'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     W: {
@@ -58,7 +57,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'setTileView',
-                text: t('nights.tilemap.setTileView'),
+                text: translate('nights.tilemap.setTileView'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -73,11 +72,11 @@ export default (Scratch, mode) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.tileset')
+                text: translate('nights.tilemap.tileset')
             },
             {
                 opcode: 'createTileSet',
-                text: t('nights.tilemap.createTileSet'),
+                text: translate('nights.tilemap.createTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TEXTURE: {
@@ -116,7 +115,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'deleteTileSet',
-                text: t('nights.tilemap.deleteTileSet'),
+                text: translate('nights.tilemap.deleteTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TILE_ID: {
@@ -127,21 +126,21 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'deleteAllTileSet',
-                text: t('nights.tilemap.deleteAllTileSet'),
+                text: translate('nights.tilemap.deleteAllTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
             },
             {
                 opcode: 'getAllTileSet',
-                text: t('nights.tilemap.getAllTileSet'),
+                text: translate('nights.tilemap.getAllTileSet'),
                 blockType: Scratch.BlockType.REPORTER,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.tile')
+                text: translate('nights.tilemap.tile')
             },
             {
                 opcode: 'getTile',
-                text: t('nights.tilemap.getTile'),
+                text: translate('nights.tilemap.getTile'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -160,7 +159,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'setTile',
-                text: t('nights.tilemap.setTile'),
+                text: translate('nights.tilemap.setTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -183,7 +182,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'clearTile',
-                text: t('nights.tilemap.clearTile'),
+                text: translate('nights.tilemap.clearTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -206,7 +205,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'clearAllTile',
-                text: t('nights.tilemap.clearAllTile'),
+                text: translate('nights.tilemap.clearAllTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER: {
@@ -217,11 +216,11 @@ export default (Scratch, mode) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.tileLayer')
+                text: translate('nights.tilemap.tileLayer')
             },
             {
                 opcode: 'createTileLayer',
-                text: t('nights.tilemap.createTileLayer'),
+                text: translate('nights.tilemap.createTileLayer'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER_NAME: {
@@ -232,7 +231,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'deleteTileLayer',
-                text: t('nights.tilemap.deleteTileLayer'),
+                text: translate('nights.tilemap.deleteTileLayer'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER_NAME: {
@@ -243,16 +242,16 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'getTileLayers',
-                text: t('nights.tilemap.getTileLayers'),
+                text: translate('nights.tilemap.getTileLayers'),
                 blockType: Scratch.BlockType.REPORTER,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.layer')
+                text: translate('nights.tilemap.layer')
             },
             {
                 opcode: 'joinTileMap',
-                text: t('nights.tilemap.joinTileMap'),
+                text: translate('nights.tilemap.joinTileMap'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TILEMAP: {
@@ -263,7 +262,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'setLayerInTileMap',
-                text: t('nights.tilemap.setLayerInTileMap'),
+                text: translate('nights.tilemap.setLayerInTileMap'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER: {
@@ -279,16 +278,16 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'quitTilemap',
-                text: t('nights.tilemap.quitTilemap'),
+                text: translate('nights.tilemap.quitTilemap'),
                 blockType: Scratch.BlockType.COMMAND,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: t('nights.tilemap.position'),
+                text: translate('nights.tilemap.position'),
             },
             {
                 opcode: 'tileToPos',
-                text: t('nights.tilemap.tileToPos'),
+                text: translate('nights.tilemap.tileToPos'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -307,7 +306,7 @@ export default (Scratch, mode) => {
             },
             {
                 opcode: 'posToTile',
-                text: t('nights.tilemap.posToTile'),
+                text: translate('nights.tilemap.posToTile'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -330,11 +329,11 @@ export default (Scratch, mode) => {
                 items: [
                     {
                         value: SHOW_MODE.TILEMAP,
-                        text: t('nights.tilemap.showTilemap'),
+                        text: translate('nights.tilemap.showTilemap'),
                     },
                     {
                         value: SHOW_MODE.SPRITE,
-                        text: t('nights.tilemap.hideTilemap'),
+                        text: translate('nights.tilemap.hideTilemap'),
                     },
                 ]
             },
@@ -342,11 +341,11 @@ export default (Scratch, mode) => {
                 items: [
                     {
                         value: POSITION.X,
-                        text: t('x'),
+                        text: translate('x'),
                     },
                     {
                         value: POSITION.Y,
-                        text: t('y'),
+                        text: translate('y'),
                     },
                 ]
             },
@@ -354,11 +353,11 @@ export default (Scratch, mode) => {
                 items: [
                     {
                         value: POSITION.X,
-                        text: t('列'),
+                        text: translate('列'),
                     },
                     {
                         value: POSITION.Y,
-                        text: t('行'),
+                        text: translate('行'),
                     },
                 ]
             },
