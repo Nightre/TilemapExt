@@ -27,7 +27,12 @@ const mode = MODE.GANDI_PRODUCT
 class TileMapExt {
     constructor(runtime) {
 
-        this.runtime = runtime ?? Scratch.vm.runtime
+        if (mode == MODE.TURBOWARP) {
+            this.runtime = Scratch.vm.runtime
+        } else {
+            this.runtime = runtime
+        }
+        if (!this.runtime) return
 
         this.renderer = this.runtime.renderer;
         this.twgl = this.renderer.exports.twgl;
