@@ -1,32 +1,47 @@
 import Scratch from "Scratch";
 import blockInfo from "./info";
-import TileMap from "./tilemap";
+import TileMap, { round } from "./tilemap";
 import vs from "./shader/vs.vs?raw"
 import fs from "./shader/fs.fs?raw"
-import { getDrawable } from "./uitl";
-import { SHOW_MODE } from "./constant"
+import { getDrawable, range } from "./uitl";
+import { MODE, POSITION, SHOW_MODE } from "./constant"
+import translation_map from "./lang"
 
 // TODO:获取tile，设置tile超出是糊有bug
-
+// TODO:造型不自动加载
 // TODO: 代码有待优化，赶时间做的，drawcall用elementdraw来优化
+/*
+该扩展修改了 scratch-render的webglrender的_drawThese函数（在第30行）
+所有修改均标注了by：nights
+加入了specialDraw，如果drawable有这个属性那么就在绘制该精灵前调用这个函数并且传入渲染相关参数
+drawable如果有specialSkip那么scratch-render调用时就不会渲染该drawable，然后可以自己调用drawThese并传入filterSkip可以检测是否skip
+注意：drawthese只会在绘制舞台的时候绘制，选取颜色时， 不会被绘制
+
+检测是否需要tilemap（碰到x颜色GPU运算，选取颜色等都不渲染）
+根据我的研究，scratch-render在碰撞像素>一个cpu检测MAX值时会使用GPU颜色检测
+但CPU不会，为了避免这种恐怖bug，检测是否等于scratch舞台的projection并且DrawMode==‘default’，是的化就绘制
+*/
+// 模式
+const mode = MODE.GANDI_PRODUCT
+
 class TileMapExt {
-    constructor() {
-        this.vm = Scratch.vm;
-        this.runtime = vm.runtime;
-        this.renderer = this.vm.renderer;
+    constructor(runtime) {
+
+        this.runtime = runtime ?? Scratch.vm.runtime
+
+        this.renderer = this.runtime.renderer;
         this.twgl = this.renderer.exports.twgl;
         this.gl = this.renderer.gl
 
         this.originalDrawThese = this.renderer._drawThese;
-
         this.renderer._drawThese = (..._arguments) => {
-            _arguments.unshift(this) // 在参数前加个自生，这样drawThese就可以获取到我自生的东西
-
             this.drawThese.call(this.renderer, ..._arguments) // 调用
         };
 
         this.maxTextureUnits = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-        this.tileChanged = false
+        this.createTileMapProgramInfo()
+    }
+    createTileMapProgramInfo() {
         // 获取该设备支持的最多纹理单元，批量渲染时需要
         var fscode = fs.replaceAll('SKIN_NUM', this.maxTextureUnits)
         // 由于webgl1 片元着色器不支持动态数组获取所以手动ifelse判定
@@ -37,24 +52,23 @@ class TileMapExt {
                 color_if += 'else '
             }
         }
-        console.log(fscode)
         fscode = fscode.replaceAll('COLOR_IF_GET', color_if)
-        console.log(fscode, color_if)
+
         this.tileProgramInfo = this.twgl.createProgramInfo(this.gl, [
             vs.replaceAll('SKIN_NUM', this.maxTextureUnits),
             fscode
         ]);
     }
-
     // 修改scratch-render webglrender的_drawThese函数
-    // 我修改的地方都标注了 ”By: Nights“
-    drawThese(ext, drawables, drawMode, projection, opts = {}, canSkip = true/* 是否允许跳过绘制 By: Nights */) {
+    // 我修改的地方都标注了 ”By: Nights“  filterSkip
+    drawThese(drawables, drawMode, projection, opts = {}, filterSkip) {
         const gl = this._gl;
 
         // 检测是否需要tilemap（碰到x颜色GPU运算，选取颜色等都不渲染）
         // 根据我的研究，scratch-render在碰撞像素>一个cpu检测MAX值时会使用GPU颜色检测
         // 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch舞台的projection，是的化就绘制
-        const allowSpecialDraw = projection == this._projection // By:nights
+        //ShaderManager.DRAW_MODE.default = 'default'
+        const allowSpecialDraw = projection == this._projection && drawMode == 'default' // By:nights
 
         let currentShader = null;
 
@@ -66,7 +80,7 @@ class TileMapExt {
         const numDrawables = drawables.length;
         for (let drawableIndex = 0; drawableIndex < numDrawables; ++drawableIndex) {
             const drawableID = drawables[drawableIndex];
-            const twgl = ext.twgl // By:nights 获取twgl
+            const twgl = this.exports.twgl // By:nights 获取twgl
 
             // If we have a filter, check whether the ID fails
             if (opts.filter && !opts.filter(drawableID)) continue;
@@ -92,7 +106,7 @@ class TileMapExt {
             // Skip private skins, if requested.
             if (opts.skipPrivateSkins && drawable.skin.private) continue;
 
-            if (drawable.skipDraw && canSkip && allowSpecialDraw) { // 必须是在允许特殊绘制时才能跳过
+            if (allowSpecialDraw && drawable.skipDraw && (!filterSkip || filterSkip(drawable))) { // 必须是在允许特殊绘制时才能跳过
                 // 有时候可能需要跳过绘制
                 // 比如在tilemap图层里面的绘制的，普通的draw就允许跳过，如果在tilemap层里就禁止跳过
                 continue
@@ -161,13 +175,11 @@ class TileMapExt {
     }
 
     getInfo() {
-        return blockInfo(Scratch);
+        return blockInfo(Scratch, mode);
     }
     initTileMap(drawable) {
         if (!drawable.tileMap) {
-            // 初始化视点
-            drawable.tileViewX = 0
-            drawable.tileViewY = 0
+            // 初始化
             drawable.skipDraw = false
             drawable.specialDrawZ = null
             drawable.tileMap = new TileMap(this)
@@ -198,7 +210,7 @@ class TileMapExt {
             }
         }
 
-        this.dirty()
+        this.makeDirty()
     }
     setTileSize(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
@@ -206,11 +218,11 @@ class TileMapExt {
 
         // 重新设置大小
         drawable.tileMap.tileSize = {
-            x: args.W,
-            y: args.H
+            x: Math.max(args.W, 0),
+            y: Math.max(args.H, 0)
         }
         // 需要重新绘制一遍
-        this.dirty()
+        this.makeDirty()
     }
     setMapSize(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
@@ -218,7 +230,7 @@ class TileMapExt {
         // 重新设置大小
         drawable.tileMap.setMapSize(args.W, args.H)
         // 需要重新绘制一遍
-        this.dirty()
+        this.makeDirty()
     }
     setTileView(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
@@ -229,7 +241,7 @@ class TileMapExt {
             y: args.Y
         }
         // 需要重新绘制一遍
-        this.dirty()
+        this.makeDirty()
     }
 
 
@@ -279,39 +291,41 @@ class TileMapExt {
         const drawable = this.getDrawableInit(util)
         // 检测目标tile是否存在
         const map = drawable.tileMap
-        if (this.isTileExsit(drawable, args)) return '-1'
+        if (!this.isTileExsit(drawable, args)) return '-1'
         if (!map.isLayerExist(args.LAYER)) return '-1'
-
+        const x = Math.round(args.X) - 1
+        const y = Math.round(args.Y) - 1
         // 获取tile
 
-        return map.getTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1)
+        return map.getTile(map.getLayerByName(args.LAYER), x, y)
     }
     setTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
         const map = drawable.tileMap
         // 检测目标tile是否存在
-        if (this.isTileExsit(drawable, args)) return '-1'
-        if (!map.isLayerExist(args.LAYER)) return '-1'
-
+        if (!this.isTileExsit(drawable, args)) return
+        if (!map.isLayerExist(args.LAYER)) return
         // 设置tile
-        map.setTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1, args.TILE_ID)
-        // 需要重新绘制一遍
-        // 不能每次调用都绘制因为可能在同一帧里面调用多次
-        this.tileChanged = true
-        this.renderer.dirty = true
+        const x = Math.round(args.X) - 1
+        const y = Math.round(args.Y) - 1
+
+        map.setTile(map.getLayerByName(args.LAYER), x, y, args.TILE_ID)
+        this.makeDirty()
     }
     clearTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
         const map = drawable.tileMap
         // 检测目标tile是否存在
-        if (this.isTileExsit(drawable, args)) return '-1'
+        if (!this.isTileExsit(drawable, args)) return '-1'
         if (!map.isLayerExist(args.LAYER)) return '-1'
         // 设置tile
-        map.setTile(map.getLayerByName(args.LAYER), args.X - 1, args.Y - 1, -1)
+        const x = Math.round(args.X) - 1
+        const y = Math.round(args.Y) - 1
+        map.setTile(map.getLayerByName(args.LAYER), x, y, -1)
         // 需要重新绘制一遍
-        this.dirty()
+        this.makeDirty()
     }
     clearAllTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
@@ -322,22 +336,38 @@ class TileMapExt {
         // 清除
         map.clearAllTile(map.getLayerByName(args.LAYER))
         // 需要重新绘制一遍
-        this.dirty()
+        this.makeDirty()
     }
 
     tileToPos(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
-        // TODO:
+        const tilemap = drawable.tileMap
+        const x = Math.round(args.X)
+        const y = Math.round(args.Y)
 
-        return '{}'
+        if (args.POSITION == POSITION.X) {
+            return ((tilemap.tileSize.x * (x + 1 - tilemap.viewId.x) + tilemap.offset.x) * tilemap.scale.x) + drawable._position[0]
+        } else {
+            // scratch中Y是反的
+            return ((- tilemap.tileSize.y * (y + 1 - tilemap.viewId.y) + tilemap.offset.y) * tilemap.scale.y) + drawable._position[1]
+        }
     }
     posToTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
-        // TODO:
+        const tilemap = drawable.tileMap
 
-        return '{}'
+        if (args.POSITION_TILEMAP == POSITION.X) {
+            let subX = (drawable._position[0] + tilemap.offset.x * tilemap.scale.x) - args.X
+            let tileXOffset = subX / (tilemap.tileSize.x * tilemap.scale.x)
+            return tilemap.viewId.x - tileXOffset + 1
+        } else {
+            // scratch中Y是反的
+            let subY = args.Y - (drawable._position[1] + tilemap.offset.y * tilemap.scale.y)
+            let tileYOffset = subY / (tilemap.tileSize.y * tilemap.scale.y)
+            return tilemap.viewId.y - tileYOffset + 1
+        }
     }
     joinTileMap(args, uitl) {
         // 获取 drawable
@@ -365,11 +395,15 @@ class TileMapExt {
     setLayerInTileMap(args, uitl) {
         // 获取 drawable
         const drawable = getDrawable(uitl, this.renderer)
+
+
         const parent = drawable.tileMapParent
 
         if (parent && parent.tileMap) {// 如果加入了tilemap那就设置否则啥也不干
-
-            parent.tileMap.setChildZ(drawable._id, args.ROW, args.LAYER)
+            const tilemap = parent.tileMap
+            const row = range(Math.round(args.ROW) - 1, 0, tilemap.mapSize.y)
+            const layer = range(Math.round(args.LAYER) - 1, 0, tilemap.tileLayers.length)
+            tilemap.setChildZ(drawable._id, row, layer)
         }
     }
     quitTilemap(args, uitl) {
@@ -396,7 +430,7 @@ class TileMapExt {
         return JSON.stringify(drawable.tileMap.tileLayers)
     }
 
-    dirty() {
+    makeDirty() {
         this.renderer.dirty = true
         //this.renderer.draw()
     }
@@ -413,7 +447,9 @@ class TileMapExt {
      * 更具drawable获取tilemap并检测该tile是否存在
      */
     isTileExsit(drawable, args) {
-        return drawable.tileMap.isElementExist(drawable.tileMap, args.X - 1, args.Y - 1)
+        const size = drawable.tileMap.mapSize
+        // scratch转js索引
+        return args.X - 1 < size.x && args.Y - 1 < size.y && args.X - 1 >= 0 && args.Y - 1 >= 0
     }
     getSpriteDrawableMenu() {
         const { targets } = this.runtime;
@@ -434,4 +470,33 @@ class TileMapExt {
     }
 }
 
-Scratch.extensions.register(new TileMapExt());
+if (mode === MODE.GANDI_DEV) {
+    window.tempExt = {
+        Extension: TileMapExt,
+        info: {
+            name: 'nights.Tilemap.extensionName',
+            description: 'nights.Tilemap.description',
+            extensionId: 'nightsTilemap',
+            // iconURL: icon,
+            // insetIconURL: cover,
+            featured: true,
+            disabled: false,
+        },
+        l10n: {
+            'zh-cn': {
+                'nights.Tilemap.extensionName': '瓦片地图',
+                'nights.Tilemap.description': '高性能瓦片地图渲染，快有点意思...',
+            },
+            'en': {
+                'nights.Tilemap.extensionName': 'Tilemap',
+                'nights.Tilemap.description': 'High-performance tile map rendering, it\'s getting interestingly fast...',
+            },
+        },
+    }
+} else if (mode == MODE.TURBOWARP) {
+    Scratch.extensions.register(new TileMapExt());
+} else if (mode == MODE.GANDI_PRODUCT) {
+
+}
+
+export default TileMapExt

@@ -1,11 +1,15 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        port: 8000,
+        cors: '*',
+    },
     build: {
         lib: {
             entry: 'src/main.js',
-            fileName: format => `stats.js`,
-            formats: ['iife'],
+            fileName: format => `tilemap.${format}.js`,
+            formats: ['iife','esm'],
             name: 'tilemap',
         },
         minify: false,

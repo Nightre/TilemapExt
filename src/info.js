@@ -1,18 +1,24 @@
-import { SHOW_MODE, POSITION } from "./constant"
+import { SHOW_MODE, POSITION, MODE } from "./constant"
+import translation_map from "./lang"
 
-export default (Scratch) => {
-    return {
-        id: 'ui',
-        name: '瓦片地图',
+export default (Scratch, mode) => {
+
+    const t = (s) => {
+        return Scratch.translate({ id: s, default: s }) ?? s
+    }
+    Scratch.translate.setup(translation_map)
+    const info = {
+        id: 'nightstilemap',
+        name: t('nights.tilemap.name'),
         blocks: [
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '🍘 基本操作'
+                text: t('nights.tilemap.basic')
             },
             {
                 opcode: 'show',
                 blockType: Scratch.BlockType.COMMAND,
-                text: '设置[SHOW_MODE]',
+                text: t('nights.tilemap.show'),
                 arguments: {
                     SHOW_MODE: {
                         type: Scratch.ArgumentType.STRING,
@@ -22,7 +28,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setTileSize',
-                text: '设置瓦片大小 宽:[W]像素 高:[H]像素',
+                text: t('nights.tilemap.setTileSize'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     W: {
@@ -37,7 +43,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setMapSize',
-                text: '设置地图大小 宽:[W]个瓦片 高:[H]个瓦片',
+                text: t('nights.tilemap.setMapSize'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     W: {
@@ -52,7 +58,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setTileView',
-                text: '设置地图摄像机 x:[X] y:[Y]',
+                text: t('nights.tilemap.setTileView'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -67,11 +73,11 @@ export default (Scratch) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '📝 创建瓦片集'
+                text: t('nights.tilemap.tileset')
             },
             {
                 opcode: 'createTileSet',
-                text: '创建从图片[TEXTURE]的 坐标:[X][Y] 大小:[W][H] 偏移:[OX][OY] 的瓦片命名为[TILE_ID]',
+                text: t('nights.tilemap.createTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TEXTURE: {
@@ -110,7 +116,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'deleteTileSet',
-                text: '删除瓦片集名为[TILE_ID]的瓦片',
+                text: t('nights.tilemap.deleteTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TILE_ID: {
@@ -121,21 +127,21 @@ export default (Scratch) => {
             },
             {
                 opcode: 'deleteAllTileSet',
-                text: '删除全部瓦片集',
+                text: t('nights.tilemap.deleteAllTileSet'),
                 blockType: Scratch.BlockType.COMMAND,
             },
             {
                 opcode: 'getAllTileSet',
-                text: '所有瓦片集',
+                text: t('nights.tilemap.getAllTileSet'),
                 blockType: Scratch.BlockType.REPORTER,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '📐 瓦片操作'
+                text: t('nights.tilemap.tile')
             },
             {
                 opcode: 'getTile',
-                text: '获取[LAYER]层的瓦片的[X][Y]的瓦片名称',
+                text: t('nights.tilemap.getTile'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -154,7 +160,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setTile',
-                text: '设置地图中[LAYER]层的[X][Y]瓦片为[TILE_ID]瓦片',
+                text: t('nights.tilemap.setTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -177,7 +183,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'clearTile',
-                text: '擦除地图中[LAYER]层的[X][Y]的瓦片',
+                text: t('nights.tilemap.clearTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     X: {
@@ -200,7 +206,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'clearAllTile',
-                text: '擦除[LAYER]层',
+                text: t('nights.tilemap.clearAllTile'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER: {
@@ -211,11 +217,11 @@ export default (Scratch) => {
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '🎰 瓦片层'
+                text: t('nights.tilemap.tileLayer')
             },
             {
                 opcode: 'createTileLayer',
-                text: '创建瓦片层，命名为[LAYER_NAME]',
+                text: t('nights.tilemap.createTileLayer'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER_NAME: {
@@ -226,7 +232,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'deleteTileLayer',
-                text: '删除瓦片层[LAYER_NAME]',
+                text: t('nights.tilemap.deleteTileLayer'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER_NAME: {
@@ -237,16 +243,16 @@ export default (Scratch) => {
             },
             {
                 opcode: 'getTileLayers',
-                text: '获取所有瓦片层',
+                text: t('nights.tilemap.getTileLayers'),
                 blockType: Scratch.BlockType.REPORTER,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '🎴 图层'
+                text: t('nights.tilemap.layer')
             },
             {
                 opcode: 'joinTileMap',
-                text: '加入[TILEMAP]的瓦片地图',
+                text: t('nights.tilemap.joinTileMap'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     TILEMAP: {
@@ -257,7 +263,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'setLayerInTileMap',
-                text: '图层(非原版图层)设为地图中的第[LAYER]层第[ROW]行瓦片',
+                text: t('nights.tilemap.setLayerInTileMap'),
                 blockType: Scratch.BlockType.COMMAND,
                 arguments: {
                     LAYER: {
@@ -273,16 +279,16 @@ export default (Scratch) => {
             },
             {
                 opcode: 'quitTilemap',
-                text: '退出当前地图',
+                text: t('nights.tilemap.quitTilemap'),
                 blockType: Scratch.BlockType.COMMAND,
             },
             {
                 blockType: Scratch.BlockType.LABEL,
-                text: '📍 坐标变换',
+                text: t('nights.tilemap.position'),
             },
             {
                 opcode: 'tileToPos',
-                text: '地图中第[X](x)列第[Y](y)行的瓦片的[POSITION]坐标',
+                text: t('nights.tilemap.tileToPos'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -301,7 +307,7 @@ export default (Scratch) => {
             },
             {
                 opcode: 'posToTile',
-                text: '位于x:[X]y:[Y]位置的瓦片是在地图中的第几[POSITION_TILEMAP]？',
+                text: t('nights.tilemap.posToTile'),
                 blockType: Scratch.BlockType.REPORTER,
                 arguments: {
                     X: {
@@ -318,21 +324,17 @@ export default (Scratch) => {
                     }
                 }
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: '🎳 碰撞（敬请期待）'
-            },
         ],
         menus: {
             SHOW_MODE: {
                 items: [
                     {
                         value: SHOW_MODE.TILEMAP,
-                        text: '显示瓦片地图和角色',
+                        text: t('nights.tilemap.showTilemap'),
                     },
                     {
                         value: SHOW_MODE.SPRITE,
-                        text: '仅显示角色',
+                        text: t('nights.tilemap.hideTilemap'),
                     },
                 ]
             },
@@ -340,23 +342,23 @@ export default (Scratch) => {
                 items: [
                     {
                         value: POSITION.X,
-                        text: 'x',
+                        text: t('x'),
                     },
                     {
                         value: POSITION.Y,
-                        text: 'y',
+                        text: t('y'),
                     },
                 ]
             },
-            POSITION_TILEMAP:{
+            POSITION_TILEMAP: {
                 items: [
                     {
                         value: POSITION.X,
-                        text: '列',
+                        text: t('列'),
                     },
                     {
                         value: POSITION.Y,
-                        text: '行',
+                        text: t('行'),
                     },
                 ]
             },
@@ -365,5 +367,9 @@ export default (Scratch) => {
                 items: 'drawablesMenu',
             },
         },
+        translation_map: translation_map
     }
+
+
+    return info
 }
