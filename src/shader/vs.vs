@@ -13,7 +13,6 @@ uniform vec2 u_skinSizes[SKIN_NUM];
 
 varying vec2 v_texcoord;
 varying float v_textureid;
-
 void main() {
     // 转为int
     int textureid = int(a_textureid);
