@@ -1,4 +1,4 @@
-
+import Scratch from "Scratch";
 const SHOW_MODE = {
   SPRITE: "sprite",
   TILEMAP: "tilemap"
@@ -6,6 +6,10 @@ const SHOW_MODE = {
 const POSITION = {
   X: "x",
   Y: "y"
+};
+const MODE = {
+  GANDI: 0,
+  TURBOWARP: 1
 };
 const translation_map = {
   "zh-cn": {
@@ -32,8 +36,8 @@ const translation_map = {
     "nights.tilemap.posToTile": "位于x:[X]y:[Y]位置的瓦片是在地图中的第几[POSITION_TILEMAP]？",
     "nights.tilemap.basic": "基础操作",
     "nights.tilemap.tileset": "瓦片集合",
+    "nights.tilemap.mapLayer": "地图层",
     "nights.tilemap.tile": "瓦片操作",
-    "nights.tilemap.tilelayer": "瓦片层",
     "nights.tilemap.layer": "图层管理",
     "nights.tilemap.position": "坐标变换",
     "nights.tilemap.showTilemap": "显示精灵以及瓦片地图",
@@ -63,7 +67,7 @@ const translation_map = {
     "nights.tilemap.posToTile": "Which [POSITION_TILEMAP] is the tile located at x:[X] y:[Y] in the map?",
     "nights.tilemap.basic": "Basic Operations",
     "nights.tilemap.tileset": "Tilesets",
-    "nights.tilemap.tilelayer": "Tile Layer",
+    "nights.tilemap.mapLayer": "Map Layer",
     "nights.tilemap.tile": "Tile Operations",
     "nights.tilemap.layer": "Layer Management",
     "nights.tilemap.position": "Coordinate Transformation",
@@ -71,23 +75,31 @@ const translation_map = {
     "nights.tilemap.hideTilemap": "Show Sprites Only"
   }
 };
-const blockInfo = (Scratch2, mode) => {
-  const t = (s) => {
-    return Scratch2.translate({ id: s, default: s }) ?? s;
+const blockInfo = (Scratch2, mode2) => {
+  const label = (s) => {
+    switch (mode2) {
+      case MODE.GANDI:
+        return `---${translate(s)}`;
+      case MODE.TURBOWARP:
+        return {
+          blockType: Scratch2.BlockType.LABEL,
+          text: translate(s)
+        };
+    }
+  };
+  const translate = (s) => {
+    return Scratch2.translate({ id: s, default: translation_map.en[s] });
   };
   Scratch2.translate.setup(translation_map);
   const info = {
     id: "nightstilemap",
-    name: t("nights.tilemap.name"),
+    name: translate("nights.tilemap.name"),
     blocks: [
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.basic")
-      },
+      label("nights.tilemap.basic"),
       {
         opcode: "show",
         blockType: Scratch2.BlockType.COMMAND,
-        text: t("nights.tilemap.show"),
+        text: translate("nights.tilemap.show"),
         arguments: {
           SHOW_MODE: {
             type: Scratch2.ArgumentType.STRING,
@@ -97,7 +109,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "setTileSize",
-        text: t("nights.tilemap.setTileSize"),
+        text: translate("nights.tilemap.setTileSize"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           W: {
@@ -112,7 +124,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "setMapSize",
-        text: t("nights.tilemap.setMapSize"),
+        text: translate("nights.tilemap.setMapSize"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           W: {
@@ -127,7 +139,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "setTileView",
-        text: t("nights.tilemap.setTileView"),
+        text: translate("nights.tilemap.setTileView"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           X: {
@@ -140,13 +152,10 @@ const blockInfo = (Scratch2, mode) => {
           }
         }
       },
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.tileset")
-      },
+      label("nights.tilemap.tileset"),
       {
         opcode: "createTileSet",
-        text: t("nights.tilemap.createTileSet"),
+        text: translate("nights.tilemap.createTileSet"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           TEXTURE: {
@@ -185,7 +194,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "deleteTileSet",
-        text: t("nights.tilemap.deleteTileSet"),
+        text: translate("nights.tilemap.deleteTileSet"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           TILE_ID: {
@@ -196,21 +205,18 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "deleteAllTileSet",
-        text: t("nights.tilemap.deleteAllTileSet"),
+        text: translate("nights.tilemap.deleteAllTileSet"),
         blockType: Scratch2.BlockType.COMMAND
       },
       {
         opcode: "getAllTileSet",
-        text: t("nights.tilemap.getAllTileSet"),
+        text: translate("nights.tilemap.getAllTileSet"),
         blockType: Scratch2.BlockType.REPORTER
       },
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.tile")
-      },
+      label("nights.tilemap.tile"),
       {
         opcode: "getTile",
-        text: t("nights.tilemap.getTile"),
+        text: translate("nights.tilemap.getTile"),
         blockType: Scratch2.BlockType.REPORTER,
         arguments: {
           X: {
@@ -229,7 +235,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "setTile",
-        text: t("nights.tilemap.setTile"),
+        text: translate("nights.tilemap.setTile"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           X: {
@@ -252,7 +258,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "clearTile",
-        text: t("nights.tilemap.clearTile"),
+        text: translate("nights.tilemap.clearTile"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           X: {
@@ -275,7 +281,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "clearAllTile",
-        text: t("nights.tilemap.clearAllTile"),
+        text: translate("nights.tilemap.clearAllTile"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           LAYER: {
@@ -284,13 +290,10 @@ const blockInfo = (Scratch2, mode) => {
           }
         }
       },
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.tileLayer")
-      },
+      label("nights.tilemap.mapLayer"),
       {
         opcode: "createTileLayer",
-        text: t("nights.tilemap.createTileLayer"),
+        text: translate("nights.tilemap.createTileLayer"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           LAYER_NAME: {
@@ -301,7 +304,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "deleteTileLayer",
-        text: t("nights.tilemap.deleteTileLayer"),
+        text: translate("nights.tilemap.deleteTileLayer"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           LAYER_NAME: {
@@ -312,16 +315,13 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "getTileLayers",
-        text: t("nights.tilemap.getTileLayers"),
+        text: translate("nights.tilemap.getTileLayers"),
         blockType: Scratch2.BlockType.REPORTER
       },
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.layer")
-      },
+      label("nights.tilemap.layer"),
       {
         opcode: "joinTileMap",
-        text: t("nights.tilemap.joinTileMap"),
+        text: translate("nights.tilemap.joinTileMap"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           TILEMAP: {
@@ -332,7 +332,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "setLayerInTileMap",
-        text: t("nights.tilemap.setLayerInTileMap"),
+        text: translate("nights.tilemap.setLayerInTileMap"),
         blockType: Scratch2.BlockType.COMMAND,
         arguments: {
           LAYER: {
@@ -347,16 +347,13 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "quitTilemap",
-        text: t("nights.tilemap.quitTilemap"),
+        text: translate("nights.tilemap.quitTilemap"),
         blockType: Scratch2.BlockType.COMMAND
       },
-      {
-        blockType: Scratch2.BlockType.LABEL,
-        text: t("nights.tilemap.position")
-      },
+      label("nights.tilemap.position"),
       {
         opcode: "tileToPos",
-        text: t("nights.tilemap.tileToPos"),
+        text: translate("nights.tilemap.tileToPos"),
         blockType: Scratch2.BlockType.REPORTER,
         arguments: {
           X: {
@@ -375,7 +372,7 @@ const blockInfo = (Scratch2, mode) => {
       },
       {
         opcode: "posToTile",
-        text: t("nights.tilemap.posToTile"),
+        text: translate("nights.tilemap.posToTile"),
         blockType: Scratch2.BlockType.REPORTER,
         arguments: {
           X: {
@@ -398,11 +395,11 @@ const blockInfo = (Scratch2, mode) => {
         items: [
           {
             value: SHOW_MODE.TILEMAP,
-            text: t("nights.tilemap.showTilemap")
+            text: translate("nights.tilemap.showTilemap")
           },
           {
             value: SHOW_MODE.SPRITE,
-            text: t("nights.tilemap.hideTilemap")
+            text: translate("nights.tilemap.hideTilemap")
           }
         ]
       },
@@ -410,11 +407,11 @@ const blockInfo = (Scratch2, mode) => {
         items: [
           {
             value: POSITION.X,
-            text: t("x")
+            text: translate("x")
           },
           {
             value: POSITION.Y,
-            text: t("y")
+            text: translate("y")
           }
         ]
       },
@@ -422,11 +419,11 @@ const blockInfo = (Scratch2, mode) => {
         items: [
           {
             value: POSITION.X,
-            text: t("列")
+            text: translate("列")
           },
           {
             value: POSITION.Y,
-            text: t("行")
+            text: translate("行")
           }
         ]
       },
@@ -763,8 +760,8 @@ class TileMap {
     }
   }
 }
-const vs = "// 位置\r\nattribute vec2 a_position;\r\n// 纹理位置\r\nattribute vec2 a_texcoord;\r\n// 获取u_skinSizes的索引\r\nattribute float a_textureid;\r\n// 深度测试\r\nattribute float a_depth;\r\n// 投影矩阵*模型矩阵\r\nuniform mat4 u_modelProjectionMatrix;\r\n// 根据硬件支持的最大纹理批量绘制\r\nuniform vec2 u_skinSizes[SKIN_NUM];\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\n\r\nvoid main() {\r\n    // 转为int\r\n    int textureid = int(a_textureid);\r\n    gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);\r\n    v_texcoord = a_texcoord / u_skinSizes[textureid];\r\n    v_textureid = a_textureid;\r\n}";
-const fs = "precision mediump float;\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\n\r\nuniform sampler2D u_skins[SKIN_NUM];\r\n\r\nvoid main() {\r\n    int textureid = int(v_textureid);\r\n    vec4 color;\r\n    COLOR_IF_GET\r\n    if (color.a == 0.0) discard;\r\n    gl_FragColor = color;\r\n}";
+const vs = "// 位置\r\nattribute vec2 a_position;\r\n// 纹理位置\r\nattribute vec2 a_texcoord;\r\n// 获取u_skinSizes的索引\r\nattribute float a_textureid;\r\n// 深度测试\r\nattribute float a_depth;\r\n// 投影矩阵*模型矩阵\r\nuniform mat4 u_modelProjectionMatrix;\r\n// 根据硬件支持的最大纹理批量绘制\r\nuniform vec2 u_skinSizes[SKIN_NUM];\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\nvoid main() {\r\n    // 转为int\r\n    int textureid = int(a_textureid);\r\n    gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);\r\n    v_texcoord = a_texcoord / u_skinSizes[textureid];\r\n    v_textureid = a_textureid;\r\n}";
+const fs = "precision mediump float;\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\n\r\nuniform sampler2D u_skins[SKIN_NUM];\r\nvoid main() {\r\n    int textureid = int(v_textureid);\r\n    vec4 color;\r\n    COLOR_IF_GET\r\n    if (color.a == 0.0) discard;\r\n    gl_FragColor = color;\r\n}";
 function getDrawable(util, renderer) {
   const drawableId = util.target.drawableID;
   return renderer._allDrawables[drawableId];
@@ -772,9 +769,14 @@ function getDrawable(util, renderer) {
 function range(x, min, max) {
   return Math.max(Math.min(x, max), min);
 }
+const mode = MODE.TURBOWARP;
 class TileMapExt {
   constructor(runtime) {
-    this.runtime = runtime ?? Scratch.vm.runtime;
+    {
+      this.runtime = Scratch.vm.runtime;
+    }
+    if (!this.runtime)
+      return;
     this.renderer = this.runtime.renderer;
     this.twgl = this.renderer.exports.twgl;
     this.gl = this.renderer.gl;
@@ -875,7 +877,7 @@ class TileMapExt {
     this._regionId = null;
   }
   getInfo() {
-    return blockInfo(Scratch);
+    return blockInfo(Scratch, mode);
   }
   initTileMap(drawable) {
     if (!drawable.tileMap) {
@@ -998,6 +1000,7 @@ class TileMapExt {
     map.clearAllTile(map.getLayerByName(args.LAYER));
     this.makeDirty();
   }
+  // TODO:改成矩阵计算
   tileToPos(args, util) {
     const drawable = this.getDrawableInit(util);
     const tilemap = drawable.tileMap;
@@ -1009,6 +1012,7 @@ class TileMapExt {
       return (-tilemap.tileSize.y * (y + 1 - tilemap.viewId.y) + tilemap.offset.y) * tilemap.scale.y + drawable._position[1];
     }
   }
+  // TODO:改成矩阵计算
   posToTile(args, util) {
     const drawable = this.getDrawableInit(util);
     const tilemap = drawable.tileMap;
@@ -1105,6 +1109,7 @@ class TileMapExt {
     return menu;
   }
 }
+Scratch.extensions.register(new TileMapExt());
 export {
   TileMapExt as default
 };

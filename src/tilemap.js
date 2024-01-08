@@ -116,8 +116,6 @@ class TileMap {
             x: 0,
             y: 0
         }
-        let attr = []
-        let count = 0
         /**
          * tileTextureData用于记录每个tile.texture需要绘制的数据
          */
@@ -157,18 +155,6 @@ class TileMap {
                     [offsetX + tile.w, offsetY + tile.h, tile.x + tile.w, tile.y + tile.h, textureUnit, depth],
                     [offsetX, offsetY + tile.h, tile.x, tile.y + tile.h, textureUnit, depth]
                 ]
-
-                attr.push(
-                    ...pos[0],
-                    ...pos[1],
-                    ...pos[2],
-
-                    ...pos[0],
-                    ...pos[2],
-                    ...pos[3],
-
-                )
-                count += 6
                 /**
                  * tileTextureData用于记录每个tile.texture需要绘制的数据
                  */

@@ -25,8 +25,8 @@ export default {
 
         'nights.tilemap.basic': '基础操作',
         'nights.tilemap.tileset': '瓦片集合',
+        'nights.tilemap.mapLayer': '地图层',
         'nights.tilemap.tile': '瓦片操作',
-        'nights.tilemap.tilelayer': '瓦片层',
 
         'nights.tilemap.layer': '图层管理',
         'nights.tilemap.position': '坐标变换',
@@ -60,7 +60,7 @@ export default {
 
         'nights.tilemap.basic': 'Basic Operations',
         'nights.tilemap.tileset': 'Tilesets',
-        'nights.tilemap.tilelayer': 'Tile Layer',
+        'nights.tilemap.mapLayer': 'Map Layer',
         'nights.tilemap.tile': 'Tile Operations',
         'nights.tilemap.layer': 'Layer Management',
         'nights.tilemap.position': 'Coordinate Transformation',

@@ -9,7 +9,7 @@ export default (Scratch, mode) => {
             case MODE.TURBOWARP:
                 return {
                     blockType: Scratch.BlockType.LABEL,
-                    text: translate(a)
+                    text: translate(s)
                 }
         }
     }
@@ -217,7 +217,7 @@ export default (Scratch, mode) => {
                     }
                 }
             },
-            label('nights.tilemap.tileLayer'),
+            label('nights.tilemap.mapLayer'),
             {
                 opcode: 'createTileLayer',
                 text: translate('nights.tilemap.createTileLayer'),
