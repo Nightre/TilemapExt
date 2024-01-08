@@ -22,7 +22,6 @@ drawable如果有specialSkip那么scratch-render调用时就不会渲染该drawa
 但CPU不会，为了避免这种恐怖bug，检测是否等于scratch舞台的projection并且DrawMode==‘default’，是的化就绘制
 */
 // 模式
-// 改成仅用于获取runtime时判定
 const mode = MODE.GANDI
 
 class TileMapExt {
