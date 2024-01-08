@@ -1,27 +1,5 @@
 
-// round
-export function round(floor, x) {
-    return floor ? Math.floor(x) : Math.ceil(x)
-}
-
-// 分割json，每份chunkSize个
-export function splitJSON(jsonObj, chunkSize) {
-    const keys = Object.keys(jsonObj);
-    const chunks = [];
-
-    for (let i = 0; i < keys.length; i += chunkSize) {
-        const chunkKeys = keys.slice(i, i + chunkSize);
-        const chunkObj = {};
-
-        for (const key of chunkKeys) {
-            chunkObj[key] = jsonObj[key];
-        }
-
-        chunks.push(chunkObj);
-    }
-
-    return chunks;
-}
+import { splitJSON, round } from "./uitl";
 
 class TileMap {
     constructor(tileExt) {
@@ -61,6 +39,8 @@ class TileMap {
         this.tileSet = {}
 
         this.buffer = this.gl.createBuffer()
+        this.indexBuffer = this.gl.createBuffer()
+
         this.maxTextureUnits = 1//this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
         // 缓存深度缓冲区数组，记录了一行的深度缓冲区值
         this.depthBufferCache = []
@@ -161,18 +141,28 @@ class TileMap {
                 if (!tilesTextureData[tile.texture]) {
                     tilesTextureData[tile.texture] = {
                         count: 0,
-                        buffer: []
+                        buffer: [],
+                        index: []
                     }
                 }
-                tilesTextureData[tile.texture].count += 6
+
+                const count = tilesTextureData[tile.texture].buffer.length / 6
+                tilesTextureData[tile.texture].count += 4
                 tilesTextureData[tile.texture].buffer.push(
                     ...pos[0],
                     ...pos[1],
                     ...pos[2],
-
-                    ...pos[0],
-                    ...pos[2],
                     ...pos[3],
+                )
+                // 使用drawelement优化，顶点
+                tilesTextureData[tile.texture].index.push(
+                    count + 0,
+                    count + 1,
+                    count + 2,
+
+                    count + 0,
+                    count + 2,
+                    count + 3,
                 )
             }
         }
@@ -210,7 +200,6 @@ class TileMap {
                 renderOffset.x += tileSize.x
 
             }
-            this.depthBufferCache.push(depthStep)
             depthStep += this.depthuUnit * this.tileData.length
             renderOffset.y += tileSize.y
         }
@@ -225,8 +214,9 @@ class TileMap {
         modelMatrix[5] /= skinSize[1]
 
         // 矩阵变换，删除skin中心
-        modelMatrix[12] = drawable._position[0];
-        modelMatrix[13] = drawable._position[1];
+        // 在这里设置不会缩放，在offset矩阵会。因为他们相乘法
+        modelMatrix[12] = drawable._position[0] - renderer._nativeSize[0] / 2;
+        modelMatrix[13] = drawable._position[1] + renderer._nativeSize[1] / 2; //总所周知，scratch的Y是反的
 
         const offset = m4.translation([-this.offset.x, -this.offset.y, 0]);
         m4.multiply(modelMatrix, offset, modelMatrix);
@@ -248,6 +238,7 @@ class TileMap {
             // 该批量渲染用的skin以及skinSize
             let u_skins = []
             let u_skinSizes = []
+            let indices = []
 
             for (const costumeId in dataForDrawCall) {
                 const data = dataForDrawCall[costumeId]
@@ -263,13 +254,14 @@ class TileMap {
                 const skin = renderer._allSkins[skinId]
 
                 u_skins.push(skin.getTexture([100, 100]))//TODO:修改drawableScale
-                u_skinSizes.push(...skin.size)
+                u_skinSizes = u_skinSizes.concat(...skin.size)
+                indices = indices.concat(data.index)
             }
             Object.assign(unifrom, {
                 u_skins, u_skinSizes
             })
             twgl.setUniforms(tileProgramInfo, unifrom)
-            this.bindBufferAndDraw(attributeBuffer, count, program, gl)
+            this.bindBufferAndDraw(attributeBuffer, program, gl, indices)
         }
         // 子的drawableId用于绘制
         let childrenDrawableId = []
@@ -294,7 +286,7 @@ class TileMap {
         gl.disable(gl.DEPTH_TEST)
     }
 
-    bindBufferAndDraw(attributeBuffer, count, program, gl) {
+    bindBufferAndDraw(attributeBuffer, program, gl, indices) {
         // 根据顶点缓冲区绘制
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributeBuffer), gl.DYNAMIC_DRAW)
@@ -319,7 +311,11 @@ class TileMap {
         gl.vertexAttribPointer(adepthLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 5);
         gl.enableVertexAttribArray(adepthLoc);
 
-        gl.drawArrays(gl.TRIANGLES, 0, count)
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        // 将索引数据存入索引缓冲区
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.DYNAMIC_DRAW);
+
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
     }
 
     setTile(layer, x, y, t) {

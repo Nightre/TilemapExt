@@ -33,7 +33,7 @@ var tilemap = function(Scratch2) {
       "nights.tilemap.joinTileMap": "加入[TILEMAP]的瓦片地图",
       "nights.tilemap.setLayerInTileMap": "图层(非原版图层)设为地图中的第[LAYER]层第[ROW]行瓦片",
       "nights.tilemap.quitTilemap": "退出当前地图",
-      "nights.tilemap.tileToPos": "地图中第X列第Y行的瓦片的[POSITION]坐标",
+      "nights.tilemap.tileToPos": "地图中第[X]列第[Y]行的瓦片的[POSITION]坐标",
       "nights.tilemap.posToTile": "位于x:[X]y:[Y]位置的瓦片是在地图中的第几[POSITION_TILEMAP]？",
       "nights.tilemap.basic": "基础操作",
       "nights.tilemap.tileset": "瓦片集合",
@@ -42,7 +42,11 @@ var tilemap = function(Scratch2) {
       "nights.tilemap.layer": "图层管理",
       "nights.tilemap.position": "坐标变换",
       "nights.tilemap.showTilemap": "显示精灵以及瓦片地图",
-      "nights.tilemap.hideTilemap": "仅显示精灵"
+      "nights.tilemap.hideTilemap": "仅显示精灵",
+      "nights.tilemap.row": "行",
+      "nights.tilemap.col": "列",
+      "nights.tilemap.x": "X 坐标",
+      "nights.tilemap.y": "Y 坐标"
     },
     en: {
       "nights.tilemap.name": "Tilemap",
@@ -73,7 +77,11 @@ var tilemap = function(Scratch2) {
       "nights.tilemap.layer": "Layer Management",
       "nights.tilemap.position": "Coordinate Transformation",
       "nights.tilemap.showTilemap": "Show Sprites and Tilemap",
-      "nights.tilemap.hideTilemap": "Show Sprites Only"
+      "nights.tilemap.hideTilemap": "Show Sprites Only",
+      "nights.tilemap.row": "row",
+      "nights.tilemap.col": "column",
+      "nights.tilemap.x": "X",
+      "nights.tilemap.y": "Y"
     }
   };
   const blockInfo = (Scratch3, mode2) => {
@@ -408,11 +416,11 @@ var tilemap = function(Scratch2) {
           items: [
             {
               value: POSITION.X,
-              text: translate("x")
+              text: translate("nights.tilemap.x")
             },
             {
               value: POSITION.Y,
-              text: translate("y")
+              text: translate("nights.tilemap.y")
             }
           ]
         },
@@ -420,11 +428,11 @@ var tilemap = function(Scratch2) {
           items: [
             {
               value: POSITION.X,
-              text: translate("列")
+              text: translate("nights.tilemap.col")
             },
             {
               value: POSITION.Y,
-              text: translate("行")
+              text: translate("nights.tilemap.row")
             }
           ]
         },
@@ -437,6 +445,13 @@ var tilemap = function(Scratch2) {
     };
     return info;
   };
+  function getDrawable(util, renderer) {
+    const drawableId = util.target.drawableID;
+    return renderer._allDrawables[drawableId];
+  }
+  function range(x, min, max) {
+    return Math.max(Math.min(x, max), min);
+  }
   function round(floor, x) {
     return floor ? Math.floor(x) : Math.ceil(x);
   }
@@ -486,6 +501,7 @@ var tilemap = function(Scratch2) {
       };
       this.tileSet = {};
       this.buffer = this.gl.createBuffer();
+      this.indexBuffer = this.gl.createBuffer();
       this.maxTextureUnits = 1;
       this.depthBufferCache = [];
       this.children = {};
@@ -551,17 +567,25 @@ var tilemap = function(Scratch2) {
           if (!tilesTextureData[tile.texture]) {
             tilesTextureData[tile.texture] = {
               count: 0,
-              buffer: []
+              buffer: [],
+              index: []
             };
           }
-          tilesTextureData[tile.texture].count += 6;
+          const count = tilesTextureData[tile.texture].buffer.length / 6;
+          tilesTextureData[tile.texture].count += 4;
           tilesTextureData[tile.texture].buffer.push(
             ...pos[0],
             ...pos[1],
             ...pos[2],
-            ...pos[0],
-            ...pos[2],
             ...pos[3]
+          );
+          tilesTextureData[tile.texture].index.push(
+            count + 0,
+            count + 1,
+            count + 2,
+            count + 0,
+            count + 2,
+            count + 3
           );
         }
       };
@@ -582,7 +606,6 @@ var tilemap = function(Scratch2) {
           }
           renderOffset.x += tileSize.x;
         }
-        this.depthBufferCache.push(depthStep);
         depthStep += this.depthuUnit * this.tileData.length;
         renderOffset.y += tileSize.y;
       }
@@ -592,8 +615,8 @@ var tilemap = function(Scratch2) {
       modelMatrix[1] /= -skinSize[0];
       modelMatrix[4] /= skinSize[1];
       modelMatrix[5] /= skinSize[1];
-      modelMatrix[12] = drawable._position[0];
-      modelMatrix[13] = drawable._position[1];
+      modelMatrix[12] = drawable._position[0] - renderer._nativeSize[0] / 2;
+      modelMatrix[13] = drawable._position[1] + renderer._nativeSize[1] / 2;
       const offset = m4.translation([-this.offset.x, -this.offset.y, 0]);
       m4.multiply(modelMatrix, offset, modelMatrix);
       const unifrom = {
@@ -606,6 +629,7 @@ var tilemap = function(Scratch2) {
         let attributeBuffer = [];
         let u_skins = [];
         let u_skinSizes = [];
+        let indices = [];
         for (const costumeId in dataForDrawCall) {
           const data = dataForDrawCall[costumeId];
           count += data.count;
@@ -617,14 +641,15 @@ var tilemap = function(Scratch2) {
           const skinId = costumes.skinId;
           const skin = renderer._allSkins[skinId];
           u_skins.push(skin.getTexture([100, 100]));
-          u_skinSizes.push(...skin.size);
+          u_skinSizes = u_skinSizes.concat(...skin.size);
+          indices = indices.concat(data.index);
         }
         Object.assign(unifrom, {
           u_skins,
           u_skinSizes
         });
         twgl.setUniforms(tileProgramInfo, unifrom);
-        this.bindBufferAndDraw(attributeBuffer, count, program, gl);
+        this.bindBufferAndDraw(attributeBuffer, program, gl, indices);
       }
       let childrenDrawableId = [];
       const rowUnit = this.depthuUnit * this.tileData.length;
@@ -641,7 +666,7 @@ var tilemap = function(Scratch2) {
       renderer._drawThese(childrenDrawableId, drawMode, projection, opts, () => false);
       gl.disable(gl.DEPTH_TEST);
     }
-    bindBufferAndDraw(attributeBuffer, count, program, gl) {
+    bindBufferAndDraw(attributeBuffer, program, gl, indices) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(attributeBuffer), gl.DYNAMIC_DRAW);
       var apositionLoc = gl.getAttribLocation(program, "a_position");
@@ -656,7 +681,9 @@ var tilemap = function(Scratch2) {
       var adepthLoc = gl.getAttribLocation(program, "a_depth");
       gl.vertexAttribPointer(adepthLoc, 1, gl.FLOAT, false, 4 * 6, 4 * 5);
       gl.enableVertexAttribArray(adepthLoc);
-      gl.drawArrays(gl.TRIANGLES, 0, count);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.DYNAMIC_DRAW);
+      gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
     }
     setTile(layer, x, y, t) {
       this.tileData[layer][y][x] = t;
@@ -763,13 +790,6 @@ var tilemap = function(Scratch2) {
   }
   const vs = "// 位置\r\nattribute vec2 a_position;\r\n// 纹理位置\r\nattribute vec2 a_texcoord;\r\n// 获取u_skinSizes的索引\r\nattribute float a_textureid;\r\n// 深度测试\r\nattribute float a_depth;\r\n// 投影矩阵*模型矩阵\r\nuniform mat4 u_modelProjectionMatrix;\r\n// 根据硬件支持的最大纹理批量绘制\r\nuniform vec2 u_skinSizes[SKIN_NUM];\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\nvoid main() {\r\n    // 转为int\r\n    int textureid = int(a_textureid);\r\n    gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);\r\n    v_texcoord = a_texcoord / u_skinSizes[textureid];\r\n    v_textureid = a_textureid;\r\n}";
   const fs = "precision mediump float;\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\n\r\nuniform sampler2D u_skins[SKIN_NUM];\r\nvoid main() {\r\n    int textureid = int(v_textureid);\r\n    vec4 color;\r\n    COLOR_IF_GET\r\n    if (color.a == 0.0) discard;\r\n    gl_FragColor = color;\r\n}";
-  function getDrawable(util, renderer) {
-    const drawableId = util.target.drawableID;
-    return renderer._allDrawables[drawableId];
-  }
-  function range(x, min, max) {
-    return Math.max(Math.min(x, max), min);
-  }
   const mode = MODE.TURBOWARP;
   class TileMapExt {
     constructor(runtime) {

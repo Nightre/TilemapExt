@@ -19,7 +19,7 @@ export default {
         'nights.tilemap.joinTileMap': '加入[TILEMAP]的瓦片地图',
         'nights.tilemap.setLayerInTileMap': '图层(非原版图层)设为地图中的第[LAYER]层第[ROW]行瓦片',
         'nights.tilemap.quitTilemap': '退出当前地图',
-        'nights.tilemap.tileToPos': '地图中第X列第Y行的瓦片的[POSITION]坐标',
+        'nights.tilemap.tileToPos': '地图中第[X]列第[Y]行的瓦片的[POSITION]坐标',
         'nights.tilemap.posToTile': '位于x:[X]y:[Y]位置的瓦片是在地图中的第几[POSITION_TILEMAP]？',
 
 
@@ -33,6 +33,11 @@ export default {
 
         'nights.tilemap.showTilemap': '显示精灵以及瓦片地图',
         'nights.tilemap.hideTilemap': '仅显示精灵',
+        'nights.tilemap.row':'行',
+        'nights.tilemap.col':'列',
+        'nights.tilemap.x':'X 坐标',
+        'nights.tilemap.y':'Y 坐标',
+
 
     },
     en: {
@@ -66,6 +71,11 @@ export default {
         'nights.tilemap.position': 'Coordinate Transformation',
 
         'nights.tilemap.showTilemap': 'Show Sprites and Tilemap',
-        'nights.tilemap.hideTilemap': 'Show Sprites Only'
+        'nights.tilemap.hideTilemap': 'Show Sprites Only',
+
+        'nights.tilemap.row':'row',
+        'nights.tilemap.col':'column',
+        'nights.tilemap.x':'X',
+        'nights.tilemap.y':'Y',
     },
 }

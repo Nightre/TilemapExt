@@ -335,11 +335,11 @@ export default (Scratch, mode) => {
                 items: [
                     {
                         value: POSITION.X,
-                        text: translate('x'),
+                        text: translate('nights.tilemap.x'),
                     },
                     {
                         value: POSITION.Y,
-                        text: translate('y'),
+                        text: translate('nights.tilemap.y'),
                     },
                 ]
             },
@@ -347,11 +347,11 @@ export default (Scratch, mode) => {
                 items: [
                     {
                         value: POSITION.X,
-                        text: translate('列'),
+                        text: translate('nights.tilemap.col'),
                     },
                     {
                         value: POSITION.Y,
-                        text: translate('行'),
+                        text: translate('nights.tilemap.row'),
                     },
                 ]
             },
