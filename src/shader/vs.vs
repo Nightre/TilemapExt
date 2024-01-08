@@ -17,6 +17,6 @@ void main() {
     // 转为int
     int textureid = int(a_textureid);
     gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);
-    v_texcoord = a_texcoord / u_skinSizes[textureid];
+    v_texcoord = a_texcoord / u_skinSizes[textureid]; //TODO:某些webgl1实现不支持，改成ifelse
     v_textureid = a_textureid;
 }

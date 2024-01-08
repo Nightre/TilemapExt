@@ -203,23 +203,35 @@ class TileMap {
             depthStep += this.depthuUnit * this.tileData.length
             renderOffset.y += tileSize.y
         }
-        const modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix)
+        let modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix)
 
         // drawable的矩阵缩放会根据skin大小缩放（比如svgSkin的mip纹理每个skin都不同大小），但是tilemap不需要所以除掉
         const skinSize = drawable.skin.size
-        modelMatrix[0] /= -skinSize[0]
-        modelMatrix[1] /= -skinSize[0]
+        //modelMatrix[0] /= -skinSize[0]
+        //modelMatrix[1] /= -skinSize[0]
 
-        modelMatrix[4] /= skinSize[1]
-        modelMatrix[5] /= skinSize[1]
+        //modelMatrix[4] /= skinSize[1]
+        //modelMatrix[5] /= skinSize[1]
+        modelMatrix[0] = 0
+        modelMatrix[1] = 0
+
+        modelMatrix[4] = 0
+        modelMatrix[5] = 0
+
+        const rotation00 = drawable._rotationMatrix[0];
+        const rotation01 = drawable._rotationMatrix[1];
+        const rotation10 = drawable._rotationMatrix[4];
+        const rotation11 = drawable._rotationMatrix[5];
+
+        const adjusted0 = renderer._nativeSize[0] / 2
+        const adjusted1 = -renderer._nativeSize[1] / 2
 
         // 矩阵变换，删除skin中心
         // 在这里设置不会缩放，在offset矩阵会。因为他们相乘法
-        modelMatrix[12] = drawable._position[0] - renderer._nativeSize[0] / 2;
-        modelMatrix[13] = drawable._position[1] + renderer._nativeSize[1] / 2; //总所周知，scratch的Y是反的
+        modelMatrix[12] = (rotation00 * adjusted0) + (rotation10 * adjusted1) + drawable._position[0];
+        modelMatrix[13] = (rotation01 * adjusted0) + (rotation11 * adjusted1) + drawable._position[1]; //总所周知，scratch的Y是反的
 
-        const offset = m4.translation([-this.offset.x, -this.offset.y, 0]);
-        m4.multiply(modelMatrix, offset, modelMatrix);
+
 
         const unifrom = {
             // 直接在cpu计算projection与modelMatrix

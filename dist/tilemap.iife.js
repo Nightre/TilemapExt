@@ -609,16 +609,20 @@ var tilemap = function(Scratch2) {
         depthStep += this.depthuUnit * this.tileData.length;
         renderOffset.y += tileSize.y;
       }
-      const modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix);
-      const skinSize = drawable.skin.size;
-      modelMatrix[0] /= -skinSize[0];
-      modelMatrix[1] /= -skinSize[0];
-      modelMatrix[4] /= skinSize[1];
-      modelMatrix[5] /= skinSize[1];
-      modelMatrix[12] = drawable._position[0] - renderer._nativeSize[0] / 2;
-      modelMatrix[13] = drawable._position[1] + renderer._nativeSize[1] / 2;
-      const offset = m4.translation([-this.offset.x, -this.offset.y, 0]);
-      m4.multiply(modelMatrix, offset, modelMatrix);
+      let modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix);
+      drawable.skin.size;
+      modelMatrix[0] = 0;
+      modelMatrix[1] = 0;
+      modelMatrix[4] = 0;
+      modelMatrix[5] = 0;
+      const rotation00 = drawable._rotationMatrix[0];
+      const rotation01 = drawable._rotationMatrix[1];
+      const rotation10 = drawable._rotationMatrix[4];
+      const rotation11 = drawable._rotationMatrix[5];
+      const adjusted0 = renderer._nativeSize[0] / 2;
+      const adjusted1 = -renderer._nativeSize[1] / 2;
+      modelMatrix[12] = rotation00 * adjusted0 + rotation10 * adjusted1 + drawable._position[0];
+      modelMatrix[13] = rotation01 * adjusted0 + rotation11 * adjusted1 + drawable._position[1];
       const unifrom = {
         // 直接在cpu计算projection与modelMatrix
         u_modelProjectionMatrix: m4.multiply(projection, modelMatrix)
@@ -788,7 +792,7 @@ var tilemap = function(Scratch2) {
       }
     }
   }
-  const vs = "// 位置\r\nattribute vec2 a_position;\r\n// 纹理位置\r\nattribute vec2 a_texcoord;\r\n// 获取u_skinSizes的索引\r\nattribute float a_textureid;\r\n// 深度测试\r\nattribute float a_depth;\r\n// 投影矩阵*模型矩阵\r\nuniform mat4 u_modelProjectionMatrix;\r\n// 根据硬件支持的最大纹理批量绘制\r\nuniform vec2 u_skinSizes[SKIN_NUM];\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\nvoid main() {\r\n    // 转为int\r\n    int textureid = int(a_textureid);\r\n    gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);\r\n    v_texcoord = a_texcoord / u_skinSizes[textureid];\r\n    v_textureid = a_textureid;\r\n}";
+  const vs = "// 位置\r\nattribute vec2 a_position;\r\n// 纹理位置\r\nattribute vec2 a_texcoord;\r\n// 获取u_skinSizes的索引\r\nattribute float a_textureid;\r\n// 深度测试\r\nattribute float a_depth;\r\n// 投影矩阵*模型矩阵\r\nuniform mat4 u_modelProjectionMatrix;\r\n// 根据硬件支持的最大纹理批量绘制\r\nuniform vec2 u_skinSizes[SKIN_NUM];\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\nvoid main() {\r\n    // 转为int\r\n    int textureid = int(a_textureid);\r\n    gl_Position = u_modelProjectionMatrix * vec4(a_position, a_depth, 1.0);\r\n    v_texcoord = a_texcoord / u_skinSizes[textureid]; //TODO:某些webgl1实现不支持，改成ifelse\r\n    v_textureid = a_textureid;\r\n}";
   const fs = "precision mediump float;\r\n\r\nvarying vec2 v_texcoord;\r\nvarying float v_textureid;\r\n\r\nuniform sampler2D u_skins[SKIN_NUM];\r\nvoid main() {\r\n    int textureid = int(v_textureid);\r\n    vec4 color;\r\n    COLOR_IF_GET\r\n    if (color.a == 0.0) discard;\r\n    gl_FragColor = color;\r\n}";
   const mode = MODE.TURBOWARP;
   class TileMapExt {
