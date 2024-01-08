@@ -1,7 +1,18 @@
 import { SHOW_MODE, POSITION, MODE } from "./constant"
 import translation_map from "./lang"
 
-export default (Scratch) => {
+export default (Scratch, mode) => {
+    const label = (s) => {
+        switch (mode) {
+            case MODE.GANDI:
+                return `---${translate(s)}`
+            case MODE.TURBOWARP:
+                return {
+                    blockType: Scratch.BlockType.LABEL,
+                    text: translate(a)
+                }
+        }
+    }
     const translate = (s) => {
         return Scratch.translate({ id: s, default: translation_map.en[s] })
     }
@@ -10,10 +21,8 @@ export default (Scratch) => {
         id: 'nightstilemap',
         name: translate('nights.tilemap.name'),
         blocks: [
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.basic')
-            },
+            label('nights.tilemap.basic')
+            ,
             {
                 opcode: 'show',
                 blockType: Scratch.BlockType.COMMAND,
@@ -70,10 +79,7 @@ export default (Scratch) => {
                     },
                 }
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.tileset')
-            },
+            label('nights.tilemap.tileset'),
             {
                 opcode: 'createTileSet',
                 text: translate('nights.tilemap.createTileSet'),
@@ -134,10 +140,7 @@ export default (Scratch) => {
                 text: translate('nights.tilemap.getAllTileSet'),
                 blockType: Scratch.BlockType.REPORTER,
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.tile')
-            },
+            label('nights.tilemap.tile'),
             {
                 opcode: 'getTile',
                 text: translate('nights.tilemap.getTile'),
@@ -214,10 +217,7 @@ export default (Scratch) => {
                     }
                 }
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.tileLayer')
-            },
+            label('nights.tilemap.tileLayer'),
             {
                 opcode: 'createTileLayer',
                 text: translate('nights.tilemap.createTileLayer'),
@@ -245,10 +245,7 @@ export default (Scratch) => {
                 text: translate('nights.tilemap.getTileLayers'),
                 blockType: Scratch.BlockType.REPORTER,
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.layer')
-            },
+            label('nights.tilemap.layer'),
             {
                 opcode: 'joinTileMap',
                 text: translate('nights.tilemap.joinTileMap'),
@@ -281,10 +278,7 @@ export default (Scratch) => {
                 text: translate('nights.tilemap.quitTilemap'),
                 blockType: Scratch.BlockType.COMMAND,
             },
-            {
-                blockType: Scratch.BlockType.LABEL,
-                text: translate('nights.tilemap.position'),
-            },
+            label('nights.tilemap.position'),
             {
                 opcode: 'tileToPos',
                 text: translate('nights.tilemap.tileToPos'),
