@@ -345,6 +345,8 @@ class TileMapExt {
         this.makeDirty()
     }
 
+
+    // TODO:改成矩阵计算
     tileToPos(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
@@ -359,6 +361,7 @@ class TileMapExt {
             return ((- tilemap.tileSize.y * (y + 1 - tilemap.viewId.y) + tilemap.offset.y) * tilemap.scale.y) + drawable._position[1]
         }
     }
+    // TODO:改成矩阵计算
     posToTile(args, util) {
         // 获取 drawable 并检测tilemap是否需要初始化
         const drawable = this.getDrawableInit(util)
