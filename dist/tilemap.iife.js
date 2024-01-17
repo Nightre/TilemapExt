@@ -610,11 +610,11 @@ var tilemap = function(Scratch2) {
         renderOffset.y += tileSize.y;
       }
       let modelMatrix = m4.copy(drawable.getUniforms().u_modelMatrix);
-      drawable.skin.size;
-      modelMatrix[0] = 0;
-      modelMatrix[1] = 0;
-      modelMatrix[4] = 0;
-      modelMatrix[5] = 0;
+      const skinSize = drawable.skin.size;
+      modelMatrix[0] /= -skinSize[0];
+      modelMatrix[1] /= -skinSize[0];
+      modelMatrix[4] /= skinSize[1];
+      modelMatrix[5] /= skinSize[1];
       const rotation00 = drawable._rotationMatrix[0];
       const rotation01 = drawable._rotationMatrix[1];
       const rotation10 = drawable._rotationMatrix[4];
@@ -627,6 +627,7 @@ var tilemap = function(Scratch2) {
         // 直接在cpu计算projection与modelMatrix
         u_modelProjectionMatrix: m4.multiply(projection, modelMatrix)
       };
+      debugger;
       const batchDrawData = splitJSON(tilesTextureData, this.maxTextureUnits);
       for (const dataForDrawCall of batchDrawData) {
         let count = 0;

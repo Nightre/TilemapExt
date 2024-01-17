@@ -49,6 +49,7 @@ class TileMapExt {
     createTileMapProgramInfo() {
         // 获取该设备支持的最多纹理单元，批量渲染时需要
         var fscode = fs.replaceAll('SKIN_NUM', this.maxTextureUnits)
+        
         // 由于webgl1 片元着色器不支持动态数组获取所以手动ifelse判定
         let color_if = ''
         for (let index = 0; index < this.maxTextureUnits; index++) {
@@ -121,7 +122,6 @@ class TileMapExt {
                 if (allowSpecialDraw) {
                     // 退出scratch绘制
                     this._doExitDrawRegion();
-
                     drawable.specialDraw(projection, drawableScale, drawMode, opts);
                     // 因为每次特殊绘制都会绘制scratch精灵
                     // 没必要自己再弄个区域，直接设为null

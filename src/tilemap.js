@@ -207,16 +207,16 @@ class TileMap {
 
         // drawable的矩阵缩放会根据skin大小缩放（比如svgSkin的mip纹理每个skin都不同大小），但是tilemap不需要所以除掉
         const skinSize = drawable.skin.size
-        //modelMatrix[0] /= -skinSize[0]
-        //modelMatrix[1] /= -skinSize[0]
+        modelMatrix[0] /= -skinSize[0]
+        modelMatrix[1] /= -skinSize[0]
 
-        //modelMatrix[4] /= skinSize[1]
-        //modelMatrix[5] /= skinSize[1]
-        modelMatrix[0] = 0
-        modelMatrix[1] = 0
+        modelMatrix[4] /= skinSize[1]
+        modelMatrix[5] /= skinSize[1]
+        //modelMatrix[0] = 1
+        //modelMatrix[1] = 0
 
-        modelMatrix[4] = 0
-        modelMatrix[5] = 0
+        //modelMatrix[4] = 0
+        //modelMatrix[5] = 1
 
         const rotation00 = drawable._rotationMatrix[0];
         const rotation01 = drawable._rotationMatrix[1];
@@ -237,6 +237,7 @@ class TileMap {
             // 直接在cpu计算projection与modelMatrix
             u_modelProjectionMatrix: m4.multiply(projection, modelMatrix)
         }
+        debugger
         // 根据硬件支持的最大纹理单元数量自动分割为多次批量渲染
         // 顺序无所谓，因为有深度测试
         const batchDrawData = splitJSON(tilesTextureData, this.maxTextureUnits)
